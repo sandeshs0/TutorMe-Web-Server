@@ -1,13 +1,18 @@
 const express = require("express")
 const connectDb=require("./config/db")
+const UserRoute=require("./routes/userRoute")
 const app= express();
 
 
 connectDb();
 
-app.use("/",()=>{
-    console.log("hi bro")
-})
+app.use(express.json());
+app.use("/api/users",UserRoute );
+
+
+// app.use("/",()=>{
+//     console.log("hi bro")
+// })
 
 
 const port=3000;
