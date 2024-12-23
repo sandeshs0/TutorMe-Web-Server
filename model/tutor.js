@@ -29,7 +29,8 @@ const tutorSchema= new mongoose.Schema({
     },
     rating:{
         type:Number,
-        required:false
+        required:false,
+        default:0,
     },
     dateJoined: {
         type: Date,

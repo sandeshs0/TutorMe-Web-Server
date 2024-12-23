@@ -9,6 +9,18 @@ const getAll= async (req,res)=>{
     }
 };
 
+const getById= async (req,res)=>{
+    try {
+        const user = await user.findById(req.params.id);
+        if (user == null) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json(user);
+    }catch(e){
+        res.status(500).json({ message: error.message });
+    }
+};
+
 const create = async (req, res) => {
     console.log("Request Body:", req.body);
     try {
@@ -28,5 +40,38 @@ const create = async (req, res) => {
     }
 };
 
+// Update method
+const update = async (req, res) => {
+    try{
+        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true }); 
+        if(!user){
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json(user);
+    }catch(error){
+        res.status(500).json({ message: error.message });
+    }
+};
 
-module.exports = { getAll, create };
+// Delete method
+const deleteById = async (req, res) => {
+    try{
+        const user = await User.findByIdAndDelete(req.params.id);
+        if(!user){
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({ message: "User deleted successfully" });
+    }catch(error){
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+
+
+module.exports = {
+    getAll,
+    create,
+    getById,
+    update,
+    deleteById };
