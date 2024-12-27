@@ -11,13 +11,13 @@ const getAll= async (req,res)=>{
 
 const getById= async (req,res)=>{
     try {
-        const user = await user.findById(req.params.id);
-        if (user == null) {
+        const u = await user.findById(req.params.id);
+        if (u == null) {
             return res.status(404).json({ message: "User not found" });
         }
-        res.status(200).json(user);
+        res.status(200).json(u);
     }catch(e){
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: e.message });
     }
 };
 
@@ -25,12 +25,12 @@ const create = async (req, res) => {
     console.log("Request Body:", req.body);
     try {
         const { name, email, phone, password, role } = req.body;
-        const user = new User({name, email, phone, password, role});
+        const u = new user({name, email, phone, password, role});
 
-        await user.save();
-        console.log("User Saved:", user);
+        await u.save();
+        console.log("User Saved:", u);
 
-        res.status(201).json(user);
+        res.status(201).json(u);
     } catch (error) {
         console.error("Error saving user:", error);
         if (error.code === 11000) {
@@ -43,11 +43,11 @@ const create = async (req, res) => {
 // Update method
 const update = async (req, res) => {
     try{
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true }); 
-        if(!user){
+        const u = await user.findByIdAndUpdate(req.params.id, req.body, { new: true }); 
+        if(!u){
             return res.status(404).json({ message: "User not found" });
         }
-        res.status(200).json(user);
+        res.status(200).json(u);
     }catch(error){
         res.status(500).json({ message: error.message });
     }
@@ -56,8 +56,8 @@ const update = async (req, res) => {
 // Delete method
 const deleteById = async (req, res) => {
     try{
-        const user = await User.findByIdAndDelete(req.params.id);
-        if(!user){
+        const u = await user.findByIdAndDelete(req.params.id);
+        if(!u){
             return res.status(404).json({ message: "User not found" });
         }
         res.status(200).json({ message: "User deleted successfully" });

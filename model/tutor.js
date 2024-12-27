@@ -14,7 +14,7 @@ const tutorSchema= new mongoose.Schema({
         type:String,
         required:true
     },
-    bio:{
+    description:{
         type:String,
         required:true
     },
@@ -40,5 +40,5 @@ const tutorSchema= new mongoose.Schema({
 
 })
 
-const User= mongoose.model("tutors",tutorSchema)
-module.exports=user;
+const tutor= mongoose.model("tutors",tutorSchema)
+module.exports=tutor;

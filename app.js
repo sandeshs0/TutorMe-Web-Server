@@ -1,6 +1,7 @@
 const express = require("express")
 const connectDb=require("./config/db")
 const UserRoute=require("./routes/userRoute")
+const TutorRoute=require("./routes/tutorRoute")
 const app= express();
 
 
@@ -8,6 +9,7 @@ connectDb();
 
 app.use(express.json());
 app.use("/api/users",UserRoute );
+app.use("/api/tutors",TutorRoute );
 
 
 // app.use("/",()=>{
