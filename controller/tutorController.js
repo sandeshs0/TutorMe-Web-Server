@@ -25,8 +25,14 @@ const getById= async (req,res)=>{
 // Create tutor
 const create = async (req, res) => {
     try {
-        const { userId, image, bio,description, hourlyRate, subjects } = req.body;
-        const tutor = new Tutor({ userId, image, bio, description, hourlyRate, subjects });
+        const { userId, bio,description, hourlyRate, subjects } = req.body;
+        const tutor = new Tutor({ 
+            userId,
+             image:req.file.originalname,
+              bio,
+               description,
+                hourlyRate,
+                 subjects });
         await tutor.save();
         res.status(201).json(tutor);
     } catch (error) {
