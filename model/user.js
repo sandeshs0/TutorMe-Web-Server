@@ -9,7 +9,6 @@ const userSchema= new mongoose.Schema({
         type:String,
         required:true,
         unique:true,
-        match: [/.+\@.+\..+/, "Please enter a valid e-mail address"],
     },
     phone:{
         type:String,
@@ -25,6 +24,10 @@ const userSchema= new mongoose.Schema({
         enum: ["student", "tutor", "admin"],
         required:true,
     },
+    walletBalance: {
+        type: Number,
+        default: 0,
+      },
     dateJoined: {
         type: Date,
         default: Date.now,

@@ -1,6 +1,6 @@
 const joi=require("joi");
 
-const userSchema=joi.objecct({
+const userSchema=joi.object({
     name:joi.string().required(),
     email:joi.string().email().required(),
     phone:joi.string().required(),

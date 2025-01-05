@@ -23,10 +23,16 @@ const tutorSchema= new mongoose.Schema({
         required:true
     },
 
-    subjects:{
-        type:[String],
-        required:true
-    },
+    subjects: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'subjects', // Referencing the subjects collection for better queries
+        },
+      ],
+      availability: {
+        type: String, // Can be a JSON string or a structured format (e.g., "Monday: 9-5")
+        required: false,
+      },
     rating:{
         type:Number,
         required:false,
