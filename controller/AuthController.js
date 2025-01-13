@@ -22,8 +22,9 @@ const register = async (req, res) => {
         // Check if the email or phone already exists
         const existingTempUser = await TempUser.findOne({ email });
         const existingUser = await User.findOne({ email });
-        if (existingTempUser || existingUser) {
-            return res.status(400).json({ message: "Email already exists" });
+        const existingPhone = await User.findOne({ phone });
+        if (existingTempUser || existingUser || existingPhone) {
+            return res.status(400).json({ message: "User with Email or Phone Number already exists" });
         }
 
         // Hash the password
@@ -31,7 +32,7 @@ const register = async (req, res) => {
 
         // Generate OTP
         const otp = generateOTP();
-        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
+        const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // OTP valid for 10 minutes
 
         // Save user data in tempUsers
         const tempUser = new TempUser({
@@ -42,11 +43,12 @@ const register = async (req, res) => {
             role,
             otp,
             otpExpiresAt,
+            ...(role === "tutor" && { bio, description, hourlyRate, subjects }), // Add tutor-specific fields
         });
         await tempUser.save();
 
         // Send OTP to user's email
-        await sendEmail(email, "Verify Your Email", `Your OTP for email verification is: ${otp}`);
+        await sendEmail(email, "Verify Your Email", `Dear ${name}, \n Your OTP for email verification is: ${otp}. \n This OTP is valid for 5 minutes. \n Thank you!, \n Team TutorMe`);
 
         res.status(201).json({ message: "OTP sent to your email. Please verify to complete registration." });
     } catch (error) {
@@ -75,7 +77,7 @@ const verifyEmail = async (req, res) => {
         }
 
         // Move the user to the users collection
-        const { name, phone, password, role } = tempUser;
+        const { name, phone, password, role,bio,description,hourlyRate,subjects } = tempUser;
         const newUser = new User({ name, email, phone, password, role });
         await newUser.save();
 
@@ -138,7 +140,7 @@ const login = async (req, res) => {
         }
 
         // Generate a token
-        const token = jwt.sign({ id: user._id, role: user.role }, SECRET_KEY, { expiresIn: "1h" });
+        const token = jwt.sign({ id: user._id, role: user.role }, SECRET_KEY, { expiresIn: "1d" });
 
         res.status(200).json({ message: "Login successful", token, user });
     } catch (error) {
