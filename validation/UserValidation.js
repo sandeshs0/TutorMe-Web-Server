@@ -5,7 +5,7 @@ const userSchema = joi.object({
     email: joi.string().email().required(),
     phone: joi.string().required(),
     password: joi.string().required(),
-    role: joi.string().valid("student", "tutor").required(),
+    role: joi.string().valid("student", "tutor","admin").required(),
     bio: joi.when("role", { is: "tutor", then: joi.string().required(), otherwise: joi.forbidden() }),
     description: joi.when("role", { is: "tutor", then: joi.string().required(), otherwise: joi.forbidden() }),
     hourlyRate: joi.when("role", { is: "tutor", then: joi.number().required(), otherwise: joi.forbidden() }),
