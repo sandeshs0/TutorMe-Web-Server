@@ -8,6 +8,7 @@ const tempUserSchema = new mongoose.Schema({
     role: { type: String, enum: ["student", "tutor"], required: true },
     otp: { type: String, required: true },
     otpExpiresAt: { type: Date, required: true },
+    profileImage: { type: String }, // 
     bio: { type: String }, // Add for tutors
     description: { type: String }, // Add for tutors
     hourlyRate: { type: Number }, // Add for tutors

@@ -33,6 +33,11 @@ const register = async (req, res) => {
         const otp = generateOTP();
         const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // OTP valid for 10 minutes
 
+            // Handle profile image (if uploaded)
+            let profileImage = null;
+            if (req.file) {
+                profileImage = req.file.path; // Cloudinary returns the URL of the uploaded image
+            }
         // Save user data in tempUsers
         const tempUser = new TempUser({
             name,
@@ -42,6 +47,7 @@ const register = async (req, res) => {
             role,
             otp,
             otpExpiresAt,
+            profileImage,
             ...(role === "tutor" && { bio, description, hourlyRate, subjects }), // Add tutor-specific fields
         });
         await tempUser.save();
@@ -185,8 +191,8 @@ const verifyEmail = async (req, res) => {
         }
 
         // Move the user to the users collection
-        const { name, phone, password, role,bio,description,hourlyRate,subjects } = tempUser;
-        const newUser = new User({ name, email, phone, password, role });
+        const { name, phone, password, role,bio,description,hourlyRate,subjects,profileImage } = tempUser;
+        const newUser = new User({ name, email, phone, password, role,profileImage });
         await newUser.save();
 
         // Role-specific logic
