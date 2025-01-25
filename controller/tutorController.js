@@ -37,7 +37,7 @@ const getTutors = async (req, res) => {
     const filteredTutors = tutors.map((tutor) => ({
       id: tutor._id,
       name: tutor.userId?.name,
-      profileImage: tutor.userId?.profileImage,
+      profileImage: tutor.profileImage,
       email: tutor.userId?.email,
       bio: tutor.bio,
       description: tutor.description,
@@ -69,11 +69,25 @@ const updateTutorProfile = async (req, res) => {
     const tutorId = req.user.id; // Authenticated tutor's ID from token
     const { bio, description, hourlyRate, subjects, availability } = req.body;
 
-    let profileImage = req.file?.path; // Use the Cloudinary URL provided by multer
+    // let profileImage = req.file?.path; // Use the Cloudinary URL provided by multer
 
-    // Handle profile picture upload
+    const updateFields = {};
 
-    let subjectIds = [];
+    if (bio) updateFields.bio = bio;
+    if (description) updateFields.description = description;
+    if (hourlyRate) updateFields.hourlyRate = hourlyRate;
+    if (availability) updateFields.availability = availability;
+    // if (profileImage) updateFields.profileImage = profileImage;
+
+    if (req.file) {
+        const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+          folder: "tutor-profile-images", // Ensure the correct folder is used
+        });
+        updateFields.profileImage = uploadResult.secure_url;
+        console.log("uploadResult:", uploadResult);
+         // Update the database with the new URL
+      }
+
     if (subjects) {
       subjectIds = await Promise.all(
         subjects.map(async (subjectName) => {
@@ -85,17 +99,10 @@ const updateTutorProfile = async (req, res) => {
           return subject._id;
         })
       );
+      updateFields.subjects = subjectIds;
     }
 
     // Update the tutor profile
-    const updateFields = {
-      bio,
-      description,
-      hourlyRate,
-      subjects: subjectIds,
-      availability,
-      ...(profileImage && { profileImage }), 
-    };
 
     // if (profileImage) {
     //   updateFields.profileImage = profileImage; // Add profile picture if uploaded
@@ -103,7 +110,7 @@ const updateTutorProfile = async (req, res) => {
 
     const updatedTutor = await Tutor.findOneAndUpdate(
       { userId: tutorId },
-      updateFields,
+      { $set: updateFields },
       { new: true }
     ).populate("subjects", "name");
 
@@ -125,44 +132,42 @@ const updateTutorProfile = async (req, res) => {
 
 // Fetch a Specific Tutor's Profile
 const getTutorProfile = async (req, res) => {
-    try {
-      const tutorId = req.user.id; // Authenticated tutor's ID from token
-  
-      // Fetch the tutor's details along with the related user and subjects
-      const tutor = await Tutor.findOne({ userId: tutorId })
-        .populate("userId", "name email profileImage")
-        .populate("subjects", "name");
-  
-      if (!tutor) {
-        return res.status(404).json({ message: "Tutor profile not found" });
-      }
-  
-      // Format the response to include only public and necessary fields
-      const tutorProfile = {
-        id: tutor._id,
-        name: tutor.userId.name,
-        email: tutor.userId.email,
-        profileImage: tutor.userId.profileImage,
-        bio: tutor.bio,
-        walletBalance: tutor.walletBalance,
-        description: tutor.description,
-        hourlyRate: tutor.hourlyRate,
-        rating: tutor.rating,
-        subjects: tutor.subjects.map((subject) => subject.name),
-        availability: tutor.availability,
-      };
-  
-      res.status(200).json({
-        message: "Tutor profile fetched successfully",
-        tutor: tutorProfile,
-      });
-    } catch (error) {
-      console.error("Error fetching tutor profile:", error);
-      res.status(500).json({ message: "Failed to fetch tutor profile" });
-    }
-  };
+  try {
+    const tutorId = req.user.id; // Authenticated tutor's ID from token
 
-  
+    // Fetch the tutor's details along with the related user and subjects
+    const tutor = await Tutor.findOne({ userId: tutorId })
+      .populate("userId", "name email profileImage")
+      .populate("subjects", "name");
+
+    if (!tutor) {
+      return res.status(404).json({ message: "Tutor profile not found" });
+    }
+
+    // Format the response to include only public and necessary fields
+    const tutorProfile = {
+      id: tutor._id,
+      name: tutor.userId.name,
+      email: tutor.userId.email,
+      profileImage: tutor.profileImage,
+      bio: tutor.bio,
+      walletBalance: tutor.walletBalance,
+      description: tutor.description,
+      hourlyRate: tutor.hourlyRate,
+      rating: tutor.rating,
+      subjects: tutor.subjects.map((subject) => subject.name),
+      availability: tutor.availability,
+    };
+
+    res.status(200).json({
+      message: "Tutor profile fetched successfully",
+      tutor: tutorProfile,
+    });
+  } catch (error) {
+    console.error("Error fetching tutor profile:", error);
+    res.status(500).json({ message: "Failed to fetch tutor profile" });
+  }
+};
 
 module.exports = {
   getTutors,

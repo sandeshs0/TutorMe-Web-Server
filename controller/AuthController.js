@@ -192,7 +192,7 @@ const verifyEmail = async (req, res) => {
 
         // Move the user to the users collection
         const { name, phone, password, role,bio,description,hourlyRate,subjects,profileImage } = tempUser;
-        const newUser = new User({ name, email, phone, password, role,profileImage });
+        const newUser = new User({ name, email, phone, password, role });
         await newUser.save();
 
         // Role-specific logic
@@ -200,7 +200,7 @@ const verifyEmail = async (req, res) => {
             const newStudent = new Student({ userId: newUser._id });
             await newStudent.save();
         } else if (role === "tutor") {
-            const { bio, description, hourlyRate, subjects } = tempUser;
+            const { bio, description, hourlyRate, subjects, profileImage } = tempUser;
 
             let subjectIds = [];
             if (subjects && subjects.length > 0) {
@@ -222,6 +222,7 @@ const verifyEmail = async (req, res) => {
                 description,
                 hourlyRate,
                 subjects: subjectIds,
+                profileImage,
             });
             await newTutor.save();
         }
