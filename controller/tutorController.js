@@ -1,78 +1,129 @@
-const Tutor= require('../model/tutor');
+const Tutor = require("../model/tutor");
+const User = require("../model/user");
+const Subject = require("../model/subject");
+const bcrypt = require("bcrypt");
+const cloudinary = require("../utils/cloudinary");
 
-const getAll= async (req,res)=>{
-    try{
-        const tutors= await Tutor.find();
-        res.status(200).json(tutors);
-    }catch(e){
-        res.status(500).json({ message: error.message });
+// Fetch all tutors
+const getTutors = async (req, res) => {
+  try {
+    const {
+      subject,
+      minHourlyRate,
+      maxHourlyRate,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const query = {};
+    if (subject) {
+      const subjectDoc = await Subject.findOne({ name: subject });
+      if (subjectDoc) query.subjects = subjectDoc._id;
     }
+    if (minHourlyRate)
+      query.hourlyRate = { ...query.hourlyRate, $gte: Number(minHourlyRate) };
+    if (maxHourlyRate)
+      query.hourlyRate = { ...query.hourlyRate, $lte: Number(maxHourlyRate) };
+
+    const tutors = await Tutor.find(query)
+      .populate("userId", "name profileImage email") // Only populate public fields
+      .populate("subjects", "name") // Only fetch subject names
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+
+    const totalTutors = await Tutor.countDocuments(query);
+
+    // Filter out sensitive data from the response
+    const filteredTutors = tutors.map((tutor) => ({
+      id: tutor._id,
+      name: tutor.userId?.name,
+      profileImage: tutor.userId?.profileImage,
+      email: tutor.userId?.email,
+      bio: tutor.bio,
+      description: tutor.description,
+      hourlyRate: tutor.hourlyRate,
+      rating: tutor.rating,
+      subjects: tutor.subjects.map((subject) => subject.name), // Include subject names only
+      availability: tutor.availability,
+    }));
+
+    res.status(200).json({
+      message: "Tutors fetched successfully",
+      tutors: filteredTutors,
+      pagination: {
+        currentPage: Number(page),
+        totalPages: Math.ceil(totalTutors / limit),
+        totalTutors,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching tutors:", error);
+    res.status(500).json({ message: "Failed to fetch tutors" });
+  }
 };
 
-// Get tutor by ID
-const getById= async (req,res)=>{
-    try {
-        const tutor = await Tutor.findById(req.params.id);
-        if (!tutor) {
-            return res.status(404).json({ message: "Tutor not found" });
-        }
-        res.status(200).json(tutor);
-    }catch(e){
-        res.status(500).json({ message: error.message });
-    }
-};
+// Update Tutor Profile
 
-// Create tutor
-const create = async (req, res) => {
-    try {
-        const { userId, bio,description, hourlyRate, subjects } = req.body;
-        const tutor = new Tutor({ 
-            userId,
-             image:req.file.originalname,
-              bio,
-               description,
-                hourlyRate,
-                 subjects });
-        await tutor.save();
-        res.status(201).json(tutor);
-    } catch (error) {
-        if (error.code === 11000) {
-            return res.status(400).json({ message: "Duplicate entry: " + error.message });
-        }
-        res.status(400).json({ message: error.message });
-    }
-};
+const updateTutorProfile = async (req, res) => {
+  try {
+    const tutorId = req.user.id; // Authenticated tutor's ID from token
+    const { bio, description, hourlyRate, subjects, availability } = req.body;
 
-// Update tutor
-const update = async (req, res) => {
-    try {
-        const tutor = await Tutor.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!tutor) {
-            return res.status(404).json({ message: "Tutor not found" });
-        }
-        res.status(200).json(provider);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
+    let profileImage = req.file?.path; // Use the Cloudinary URL provided by multer
 
-// Delete tutor
-const deleteById = async (req, res) => {
-    try {
-        const tutor = await Tutor.findByIdAndDelete(req.params.id);
-        if (!tutor) {
-            return res.status(404).json({ message: "Tutor not found" });
-        }
-        res.status(200).json({ message: "Tutor deleted successfully" });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    // Handle profile picture upload
+
+    let subjectIds = [];
+    if (subjects) {
+      subjectIds = await Promise.all(
+        subjects.map(async (subjectName) => {
+          let subject = await Subject.findOne({ name: subjectName });
+          if (!subject) {
+            subject = new Subject({ name: subjectName });
+            await subject.save();
+          }
+          return subject._id;
+        })
+      );
     }
+
+    // Update the tutor profile
+    const updateFields = {
+      bio,
+      description,
+      hourlyRate,
+      subjects: subjectIds,
+      availability,
+      ...(profileImage && { profileImage }), 
+    };
+
+    // if (profileImage) {
+    //   updateFields.profileImage = profileImage; // Add profile picture if uploaded
+    // }
+
+    const updatedTutor = await Tutor.findOneAndUpdate(
+      { userId: tutorId },
+      updateFields,
+      { new: true }
+    ).populate("subjects", "name");
+
+    if (!updatedTutor) {
+      return res
+        .status(404)
+        .json({ message: "Tutor not found or unauthorized" });
+    }
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      updatedTutor,
+    });
+  } catch (error) {
+    console.error("Error updating tutor profile:", error);
+    res.status(500).json({ message: "Failed to update tutor profile" });
+  }
 };
 
 module.exports = {
-    getAll,
-    getById,
-    create,
-    update,
-    deleteById
+  getTutors,
+  updateTutorProfile,
 };
