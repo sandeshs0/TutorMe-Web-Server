@@ -14,5 +14,7 @@ router.put(
   upload.single("profileImage"), // Handle single file upload with key "profileImage"
   tutorController.updateTutorProfile
 );
+router.get("/profile", authenticateToken, tutorController.getTutorProfile);
+
 
 module.exports = router;
