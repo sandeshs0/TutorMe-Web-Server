@@ -22,6 +22,7 @@ app.use(
   })
 );
 
+// console.log(process.env)
 app.use(express.json());
 app.use("/api/users", UserRoute);
 app.use("/api/tutors", TutorRoute);
