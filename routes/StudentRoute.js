@@ -1,23 +1,25 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../utils/multer"); // Import multer for file uploads
-const {
-    authenticateToken,
-    authorizeRole,
-  } = require("../middleware/authMiddleware");
-const {
-    getAllStudents,
-    getStudentProfile,
-    updateStudentProfile,
-  } = require("../controllers/studentController");
+// const upload = require("../utils/multerConfig");
+const { uploadStudent } = require("../utils/multerConfig"); // Import explicitly
 
-  router.get("/all", authenticateToken, authorizeRole("admin"), getAllStudents); // Admin only
-  router.get("/profile", authenticateToken, getStudentProfile); // Authenticated student
-  router.put(
-    "/profile",
-    authenticateToken,
-    upload.single("profileImage"),
-    updateStudentProfile
-  );
+const {
+  authenticateToken,
+  authorizeRole,
+} = require("../security/Auth");
+const {
+  getAllStudents,
+  getStudentProfile,
+  updateStudentProfile,
+} = require("../controller/StudentController");
 
-  module.exports = router;
+router.get("/all", authenticateToken, authorizeRole("admin"), getAllStudents); // Admin only
+router.get("/profile", authenticateToken, getStudentProfile); // Authenticated student
+router.put(
+  "/profile",
+  authenticateToken,
+  uploadStudent.single("profileImage"),
+  updateStudentProfile
+);
+
+module.exports = router;
