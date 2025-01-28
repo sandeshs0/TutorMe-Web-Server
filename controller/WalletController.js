@@ -1,6 +1,7 @@
 const Transaction = require("../model/Transaction");
 const Student = require("../model/student");
 const axios = require("axios");
+const KHALTI_SECRET = process.env.KHALTI_SECRET_KEY;
 
 const WalletController = {
   // Initiate a transaction
@@ -56,8 +57,8 @@ const WalletController = {
         },
         {
           headers: {
-            Authorization: `Key YOUR_KHALTI_SECRET_KEY`,
-          },
+            Authorization: `Key ${KHALTI_SECRET}`, 
+        },
         }
       );
 
