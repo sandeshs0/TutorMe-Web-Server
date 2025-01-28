@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    walletBalance: { type: Number, default: 0 }, // Funds for booking sessions
-    image: { type: String },
-    dateJoined: { type: Date, default: Date.now },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  walletBalance: { type: Number, default: 0 }, // Funds for booking sessions
+  profileImage: { type: String },
+  dateJoined: { type: Date, default: Date.now },
 });
 
 const Student = mongoose.model("Student", studentSchema);

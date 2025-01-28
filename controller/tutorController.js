@@ -68,9 +68,8 @@ const updateTutorProfile = async (req, res) => {
   try {
     const tutorId = req.user.id; // Authenticated tutor's ID from token
     const { bio, description, hourlyRate, subjects, availability } = req.body;
-
     // let profileImage = req.file?.path; // Use the Cloudinary URL provided by multer
-
+    console.log(typeof subjects);
     const updateFields = {};
 
     if (bio) updateFields.bio = bio;
@@ -80,16 +79,29 @@ const updateTutorProfile = async (req, res) => {
     // if (profileImage) updateFields.profileImage = profileImage;
 
     if (req.file) {
-        const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-          folder: "tutor-profile-images", // Ensure the correct folder is used
-        });
-        updateFields.profileImage = uploadResult.secure_url;
-        console.log("uploadResult:", uploadResult);
-         // Update the database with the new URL
-      }
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "tutor-profile-images", // Ensure the correct folder is used
+      });
+      updateFields.profileImage = uploadResult.secure_url;
+      console.log("uploadResult:", uploadResult);
+      // Update the database with the new URL
+    }
 
+    // if (subjects) {
+    //   const subjectIds = await Promise.all(
+    //     subjects.map(async (subjectName) => {
+    //       let subject = await Subject.findOne({ name: subjectName });
+    //       if (!subject) {
+    //         subject = new Subject({ name: subjectName });
+    //         await subject.save();
+    //       }
+    //       return subject._id;
+    //     })
+    //   );
+    //   updateFields.subjects = subjectIds;
+    // }
     if (subjects) {
-      subjectIds = await Promise.all(
+      const subjectIds = await Promise.all(
         subjects.map(async (subjectName) => {
           let subject = await Subject.findOne({ name: subjectName });
           if (!subject) {
@@ -99,6 +111,8 @@ const updateTutorProfile = async (req, res) => {
           return subject._id;
         })
       );
+
+      // Update the subjects field in updateFields
       updateFields.subjects = subjectIds;
     }
 
@@ -137,7 +151,7 @@ const getTutorProfile = async (req, res) => {
 
     // Fetch the tutor's details along with the related user and subjects
     const tutor = await Tutor.findOne({ userId: tutorId })
-      .populate("userId", "name email profileImage")
+      .populate("userId", "name email phone profileImage")
       .populate("subjects", "name");
 
     if (!tutor) {
@@ -149,6 +163,7 @@ const getTutorProfile = async (req, res) => {
       id: tutor._id,
       name: tutor.userId.name,
       email: tutor.userId.email,
+      phone: tutor.userId.phone,
       profileImage: tutor.profileImage,
       bio: tutor.bio,
       walletBalance: tutor.walletBalance,
