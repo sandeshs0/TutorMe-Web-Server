@@ -92,7 +92,12 @@ const WalletController = {
     const { pidx, transaction_id } = req.body;
 
     try {
-      console.log("Tyring to hit the khalti/lookup with token:", pidx, typeof pidx, transaction_id);
+      console.log(
+        "Tyring to hit the khalti/lookup with token:",
+        pidx,
+        typeof pidx,
+        transaction_id
+      );
       // Verify the transaction with Khalti
       const khaltiResponse = await axios.post(
         "https://dev.khalti.com/api/v2/epayment/lookup/",
@@ -107,7 +112,7 @@ const WalletController = {
       );
       const { status, total_amount } = khaltiResponse.data;
       console.log("khalti says (verify):", khaltiResponse.data);
-      if (status === "Completed" || status ==="Pending") {
+      if (status === "Completed" || status === "Pending") {
         // Update the transaction status to success
         const transaction = await Transaction.findOne({
           transactionId: transaction_id,
@@ -179,6 +184,93 @@ const WalletController = {
       });
     }
   },
+
+  // Fetch all transactions for a student
+  // async getTransactions(req, res) {
+  //   const { studentId } = req.params;
+
+  //   // Ensure the user is authenticated
+  //   if (!req.user) {
+  //     return res.status(401).json({
+  //       success: false,
+  //       message: "Unauthorized. Please log in.",
+  //     });
+  //   }
+  //   // Ensure the user is only accessing their own transaction history
+  //   if (req.user.id !== studentId) {
+  //     return res.status(403).json({
+  //       success: false,
+  //       message: "Forbidden. You can only view your own transaction history.",
+  //     });
+  //   }
+
+  //   try {
+  //     // Fetch all transactions for the student
+  //     const transactions = await Transaction.find({
+  //       studentId,
+  //       status: "success",
+  //     }).select("paymentGateway amount paymentDate");
+
+  //     if (!transactions.length) {
+  //       return res.status(404).json({
+  //         success: false,
+  //         message: "No successful transactions found",
+  //       });
+  //     }
+  //     res.status(200).json({
+  //       success: true,
+  //       transactions,
+  //     });
+  //   } catch (err) {
+  //     console.error("Error fetching transactions:", err.message);
+  //     res.status(500).json({
+  //       success: false,
+  //       message: "Failed to fetch transactions",
+  //     });
+  //   }
+  // },
+  
+  async getTransactions(req, res) {
+    const userId = req.user.id; // Extract userId from authenticated user
+
+    try {
+        // Find the student associated with this user
+        const student = await Student.findOne({ userId });
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student profile not found.",
+            });
+        }
+
+        // Fetch transactions for this student
+        const transactions = await Transaction.find({
+            studentId: student._id, // Use student's ObjectId
+            status: "success",
+        }).select("paymentDate paymentGateway amount");
+
+        if (!transactions.length) {
+            return res.status(404).json({
+                success: false,
+                message: "No successful transactions found.",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            transactions,
+        });
+    } catch (err) {
+        console.error("Error fetching transaction history:", err.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch transaction history",
+        });
+    }
+}
+
+
 };
 
 module.exports = WalletController;
