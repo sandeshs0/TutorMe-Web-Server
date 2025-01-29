@@ -65,11 +65,11 @@ const WalletController = {
           },
         }
       );
-      console.log("khalti says:", khaltiResponse);
-      console.log("khalti says:", khaltiResponse.body);
+      console.log("khalti says:(init)", khaltiResponse);
+      console.log("khalti says (init):", khaltiResponse.body);
 
       const { pidx, payment_url } = khaltiResponse.data;
-      console.log("khalti says:", khaltiResponse.data);
+      console.log("khalti says(init):", khaltiResponse.data);
       res.status(201).json({
         success: true,
         pidx,
@@ -89,14 +89,15 @@ const WalletController = {
 
   // Verify a transaction
   async verifyTransaction(req, res) {
-    const { token } = req.body;
+    const { pidx, transaction_id } = req.body;
 
     try {
+      console.log("Tyring to hit the khalti/lookup with token:", pidx, typeof pidx, transaction_id);
       // Verify the transaction with Khalti
       const khaltiResponse = await axios.post(
         "https://dev.khalti.com/api/v2/epayment/lookup/",
         {
-          pidx: token,
+          pidx: pidx,
         },
         {
           headers: {
@@ -104,9 +105,9 @@ const WalletController = {
           },
         }
       );
-      const { status, total_amount, transaction_id } = khaltiResponse.data;
-      console.log("khalti says:", khaltiResponse.data);
-      if (status === "Completed") {
+      const { status, total_amount } = khaltiResponse.data;
+      console.log("khalti says (verify):", khaltiResponse.data);
+      if (status === "Completed" || status ==="Pending") {
         // Update the transaction status to success
         const transaction = await Transaction.findOne({
           transactionId: transaction_id,
