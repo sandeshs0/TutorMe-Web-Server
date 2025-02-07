@@ -16,5 +16,6 @@ router.put(
 );
 router.get("/profile", authenticateToken, tutorController.getTutorProfile);
 
+router.get("/profile/:username", tutorController.getTutorByUsername);
 
 module.exports = router;

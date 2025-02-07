@@ -26,7 +26,7 @@ const getTutors = async (req, res) => {
       query.hourlyRate = { ...query.hourlyRate, $lte: Number(maxHourlyRate) };
 
     const tutors = await Tutor.find(query)
-      .populate("userId", "name profileImage email") // Only populate public fields
+      .populate("userId", "name profileImage email username") // Only populate public fields
       .populate("subjects", "name") // Only fetch subject names
       .skip((page - 1) * limit)
       .limit(Number(limit));
@@ -39,6 +39,7 @@ const getTutors = async (req, res) => {
       name: tutor.userId?.name,
       profileImage: tutor.profileImage,
       email: tutor.userId?.email,
+      username: tutor.userId?.username,
       bio: tutor.bio,
       description: tutor.description,
       hourlyRate: tutor.hourlyRate,
@@ -184,8 +185,54 @@ const getTutorProfile = async (req, res) => {
   }
 };
 
+// Fetch a Specific Tutor's Profile by Username
+const getTutorByUsername = async (req, res) => {
+  try {
+    const { username } = req.params; // Get the username from the request params
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "Tutor with the given username not found" });
+    }
+
+    // Fetch the tutor details using the user's ID
+    const tutor = await Tutor.findOne({ userId: user._id })
+      .populate("userId", "name profileImage") // Include name and profile image of the tutor
+      .populate("subjects", "name"); // Include the names of the subjects
+
+    if (!tutor) {
+      return res.status(404).json({ message: "Tutor profile not found" });
+    }
+
+    // Format the response to include only necessary fields
+    const tutorProfile = {
+      id: tutor._id,
+      name: tutor.userId?.name || "N/A",
+      profileImage: tutor.profileImage,
+      bio: tutor.bio,
+      username: tutor.userId?.username,
+      description: tutor.description,
+      hourlyRate: tutor.hourlyRate,
+      rating: tutor.rating,
+      subjects: tutor.subjects.map((subject) => subject.name), // Include subject names only
+      availability: tutor.availability,
+    };
+
+    res.status(200).json({
+      message: "Tutor profile fetched successfully",
+      tutor: tutorProfile,
+    });
+  } catch (error) {
+    console.error("Error fetching tutor profile:", error);
+    res.status(500).json({ message: "Failed to fetch tutor profile" });
+  }
+};
+
 module.exports = {
   getTutors,
   updateTutorProfile,
+  getTutorByUsername,
   getTutorProfile,
 };
