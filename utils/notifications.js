@@ -1,4 +1,4 @@
-const Notification = require("../models/Notification");
+const Notification = require("../model/Notification");
 
 const sendNotification = async (userId, message, type = "booking") => {
   try {
