@@ -12,28 +12,39 @@ const SubjectRoute = require("./routes/SubjectRoute");
 const StudentRoute = require("./routes/StudentRoute");
 const WalletRoute = require("./routes/WalletRoute");
 const BookingRoute = require("./routes/BookingRoute");
+const connectedUsers = require("./socketStore");
 
 const app = express();
 const server = http.createServer(app); // ✅ Create HTTP Server
-const io = socketIo(server, {
+
+global.io = socketIo(server, {
   cors: {
     origin: "http://localhost:5173", // Allow frontend connection
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true, // ✅ Fix CORS issue
   },
 });
 
 // Store connected users for real-time updates
-const connectedUsers = {};
-
+global.connectedUsers = {};
 // ✅ Handle WebSocket connections
-io.on("connection", (socket) => {
+global.io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
+  console.log("Connected Users:", global.connectedUsers);
 
   // ✅ Register user on login
   socket.on("register", (userId) => {
-    connectedUsers[userId] = socket.id;
-    console.log(`User ${userId} registered with socket ID ${socket.id}`);
+    if (userId) {
+      global.connectedUsers[userId.toString()] = socket.id;
+      console.log(`✅ User ${userId} registered with socket ID ${socket.id}`);
+      console.log("Connected Users:", global.connectedUsers);
+      console.log(typeof global.connectedUsers);
+    } else {
+      console.log("⚠️ No userId provided for registration.");
+    }
   });
+  // console.log("Connected Users:", connectedUsers);
+  // console.log(typeof connectedUsers);
 
   // ✅ Join a chat/session room
   socket.on("join-room", (roomId) => {
@@ -48,12 +59,13 @@ io.on("connection", (socket) => {
 
   // ✅ Notify on user disconnect
   socket.on("disconnect", () => {
-    Object.keys(connectedUsers).forEach((userId) => {
-      if (connectedUsers[userId] === socket.id) {
-        delete connectedUsers[userId];
+    Object.keys(global.connectedUsers).forEach((key) => {
+      if (global.connectedUsers[key] === socket.id) {
+        delete global.connectedUsers[key];
+        console.log(`❌ User ${key} disconnected.`);
       }
     });
-    console.log("User disconnected:", socket.id);
+    console.log(`❌ Socket disconnected: ${socket.id}`);
   });
 });
 
@@ -84,4 +96,4 @@ server.listen(port, () => {
   console.log(`✅ Server Running at http://localhost:${port}`);
 });
 
-module.exports = { app, io, connectedUsers };
+module.exports = { app };
