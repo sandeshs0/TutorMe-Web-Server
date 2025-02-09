@@ -13,7 +13,7 @@ const StudentRoute = require("./routes/StudentRoute");
 const WalletRoute = require("./routes/WalletRoute");
 const BookingRoute = require("./routes/BookingRoute");
 const connectedUsers = require("./socketStore");
-
+const NotificationRoute = require("./routes/NotificationRoute");
 const app = express();
 const server = http.createServer(app); // ✅ Create HTTP Server
 
@@ -90,6 +90,7 @@ app.use("/api/student", StudentRoute);
 app.use("/auth", AuthRoute);
 app.use("/api/transaction", WalletRoute);
 app.use("/api/bookings", BookingRoute);
+app.use("/api/notifications", NotificationRoute);
 
 const port = 3000;
 server.listen(port, () => {

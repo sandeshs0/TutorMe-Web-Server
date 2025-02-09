@@ -1,11 +1,12 @@
 const express = require("express");
-const Notification = require("../models/Notification");
-const authenticateToken = require("../security/Auth");
+const Notification = require("../model/Notification");
+const { authenticateToken } = require("../security/Auth");
 
 const router = express.Router();
 
 // Fetch notifications for a logged-in user
 router.get("/", authenticateToken, async (req, res) => {
+  console.log("Fetching notifications for user:", req.user.id);
   try {
     const notifications = await Notification.find({ userId: req.user.id })
       .sort({ createdAt: -1 })

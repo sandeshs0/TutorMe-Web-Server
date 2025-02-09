@@ -108,7 +108,10 @@ const BookingController = {
       );
 
       // ✅ Notify tutor
-      sendNotification(tutor.userId._id, "You have a new booking request.");
+      sendNotification(
+        tutor.userId._id,
+        `You have a new booking request from ${student.userId.name} for ${date} at ${time}.`
+      );
       sendRealTimeUpdate(tutor.userId._id, "booking-request", booking);
 
       res.status(201).json({
