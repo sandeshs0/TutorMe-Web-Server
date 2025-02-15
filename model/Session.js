@@ -17,6 +17,10 @@ const SessionSchema = new mongoose.Schema(
       ref: "Student",
       required: true,
     },
+    roomId: {
+      type: String,
+      required: true, // Jitsi Meet Room ID
+    },
     date: {
       type: Date,
       required: true,
@@ -25,26 +29,38 @@ const SessionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    endTime: {
+      type: String, // Stored in HH:mm format
+      default: null, // Will be set when session ends
+    },
     duration: {
-      type: Number,
-      required: true,
+      type: Number, // Estimated duration before the session starts
+      default: 0, // Updated after the session ends
+    },
+    actualDuration: {
+      type: Number, // Actual calculated duration after session
+      default: 0,
     },
     status: {
       type: String,
-      enum: ["scheduled", "completed", "canceled"],
+      enum: ["scheduled", "in-progress", "completed", "canceled"],
       default: "scheduled",
     },
-    fee: {
+    hourlyRate: {
       type: Number,
-      required: true,
+      required: true, // Store tutor's hourly rate
+    },
+    totalFee: {
+      type: Number,
+      default: 0, // Will be calculated at the end of the session
     },
     platformFee: {
       type: Number,
-      required: true,
+      default: 0, // Will be calculated at the end of the session
     },
     tutorEarnings: {
       type: Number,
-      required: true,
+      default: 0, // Will be calculated at the end of the session
     },
   },
   {

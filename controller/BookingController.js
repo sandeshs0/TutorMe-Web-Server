@@ -1,9 +1,11 @@
 const Booking = require("../model/Booking");
 const Student = require("../model/student");
 const Tutor = require("../model/tutor");
+const Session = require("../model/Session");
+const User = require("../model/user");
 const Transaction = require("../model/Transaction"); // Track transactions
 const { sendNotification } = require("../utils/notifications"); // Notification utility
-
+const { date } = require("joi");
 // const { io } = require("../app"); // Import io properly
 // const connectedUsers = require("../socketStore");
 
@@ -46,7 +48,7 @@ const BookingController = {
     try {
       const { tutorId, date, time, note } = req.body;
       const student = await Student.findOne({ userId: req.user.id });
-
+      const studentObject = await User.findOne({ _id: req.user.id });
       if (!student) {
         return res.status(404).json({ message: "Student profile not found." });
       }
@@ -101,16 +103,16 @@ const BookingController = {
         connectedUsers[tutor.userId._id.toString()]
       );
 
-      sendRealTimeUpdate(
-        tutor.userId._id.toString(),
-        "booking-request",
-        booking
-      );
+      // sendRealTimeUpdate(
+      //   tutor.userId._id.toString(),
+      //   "booking-request",
+      //   booking
+      // );
 
       // ✅ Notify tutor
       sendNotification(
         tutor.userId._id,
-        `You have a new booking request from ${student.userId.name} for ${date} at ${time}.`
+        `You have a new booking request from ${studentObject.name} for ${date} at ${time}.`
       );
       sendRealTimeUpdate(tutor.userId._id, "booking-request", booking);
 
@@ -150,15 +152,44 @@ const BookingController = {
         return res.status(400).json({ message: "Booking is not pending." });
       }
 
-      booking.status = "confirmed";
+      // Generating a unique room ID for the session (jitsi)
+      const sessionRoom = `https://meet.jit.si/session_${booking._id}`;
+
+      const session = new Session({
+        tutorId: tutor._id,
+        hourlyRate: tutor.hourlyRate,
+        studentId: booking.studentId._id,
+        bookingId: booking._id,
+        roomId: sessionRoom,
+        date: booking.date,
+        startTime: booking.date,
+        duration: 0, // Will be updated later
+        status: "scheduled",
+      });
+      await session.save();
+
+      const studentUser = await Student.findById(booking.studentId);
+      const tutorUser = await User.findById(tutor.userId);
+      console.log("🔍 Student user found:", studentUser);
+      booking.status = "accepted";
       await booking.save();
+      console.log("✅ Booking accepted:", booking);
+      console.log("sending notification to user id", studentUser.userId._id);
+      sendNotification(
+        studentUser.userId._id,
+        `${tutorUser.name} has accepted your session request. Check the sessions tab.`
+      );
+      // sendRealTimeUpdate(studentUser.userId._id, "booking-accepted", {
+      //   booking,
+      //   sessionRoom,
+      // });
 
-      sendNotification(booking.studentId, "Your booking has been accepted!");
-      sendRealTimeUpdate(booking.studentId, "booking-accepted", booking);
-
-      res
-        .status(200)
-        .json({ success: true, message: "Booking accepted.", booking });
+      res.status(200).json({
+        success: true,
+        message: "Booking accepted.",
+        booking,
+        sessionRoom,
+      });
     } catch (error) {
       console.error("Error accepting booking:", error);
       res.status(500).json({ message: "Failed to accept booking" });
@@ -192,14 +223,20 @@ const BookingController = {
 
       booking.status = "declined";
       await booking.save();
+      console.log("✅ Booking declined:", booking);
+      // const studentUser = await Student.findById(booking.studentId);
+      const tutorUser = await User.findById(tutor.userId);
 
       // Refund booking fee
       const student = await Student.findById(booking.studentId);
       student.walletBalance += BOOKING_FEE;
       await student.save();
 
-      sendNotification(booking.studentId, "Your booking request was declined.");
-      sendRealTimeUpdate(booking.studentId, "booking-declined", booking);
+      sendNotification(
+        student.userId._id,
+        `Unfortunately, ${tutorUser.name} declined your session request. Your booking fee has been refunded.`
+      );
+      sendRealTimeUpdate(student.userId._id, "booking-declined", booking);
 
       res
         .status(200)
@@ -218,7 +255,7 @@ const BookingController = {
       const { bookingId } = req.params;
 
       const booking = await Booking.findById(bookingId);
-      if (!booking || booking.status !== "confirmed") {
+      if (!booking || booking.status !== "accepted") {
         return res
           .status(400)
           .json({ message: "Invalid or unconfirmed booking." });
@@ -307,10 +344,16 @@ const BookingController = {
         return res.status(403).json({ message: "Unauthorized." });
       }
 
-      const bookings = await Booking.find({ tutorId: tutor._id }).populate(
-        "studentId",
-        "name profileImage"
-      );
+      const bookings = await Booking.find({ tutorId: tutor._id })
+        .populate({
+          path: "studentId", // Populate studentId (which references the Student model)
+          select: "userId profileImage", // Include fields from the Student model
+          populate: {
+            path: "userId", // Populate the userId reference (which refers to the User model)
+            select: "name", // Include the name from the User model
+          },
+        })
+        .sort({ createdAt: -1 });
       res.status(200).json({ bookings });
     } catch (error) {
       console.error("Error fetching tutor bookings:", error);
