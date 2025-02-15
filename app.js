@@ -14,6 +14,8 @@ const WalletRoute = require("./routes/WalletRoute");
 const BookingRoute = require("./routes/BookingRoute");
 const connectedUsers = require("./socketStore");
 const NotificationRoute = require("./routes/NotificationRoute");
+const SessionRoute = require("./routes/SessionRoute");
+
 const app = express();
 const server = http.createServer(app); // ✅ Create HTTP Server
 
@@ -91,6 +93,7 @@ app.use("/auth", AuthRoute);
 app.use("/api/transaction", WalletRoute);
 app.use("/api/bookings", BookingRoute);
 app.use("/api/notifications", NotificationRoute);
+app.use("/api/sessions", SessionRoute);
 
 const port = 3000;
 server.listen(port, () => {
