@@ -4,13 +4,100 @@ const Tutor = require("../model/tutor");
 const User = require("../model/user");
 const Transaction = require("../model/Transaction");
 const { sendNotification } = require("../utils/notifications");
-
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 // Platform Commission (20%)
 const PLATFORM_COMMISSION = 0.2;
+
+const JAAAS_APP_ID = process.env.JAAS_APP_ID;
+const JAAAS_API_KEY = process.env.JAAS_API_KEY;
+const JAAAS_SECRET = process.env.JAAS_SECRET; // JaaS secret key
+const privateKey = process.env.JAAS_PRIVATE_KEY;
+
+async function getJaaSToken(req, res) {
+  try {
+    const { bookingId } = req.params;
+    const session = await Session.findOne({ bookingId })
+      .populate({
+        path: "tutorId",
+        populate: { path: "userId", select: "name email _id" },
+      })
+      .populate({
+        path: "studentId",
+        populate: { path: "userId", select: "name email _id" },
+      });
+
+    if (!session) {
+      return res.status(404).json({ message: "Session not found." });
+    }
+
+    const roomName = session.roomId.split("/").pop(); // Extract room name
+
+    // ✅ Ensure tutorId and studentId are populated
+    if (!session.tutorId || !session.tutorId.userId) {
+      console.error("❌ Tutor user data is missing:", session.tutorId);
+      return res.status(500).json({ message: "Tutor user data is missing." });
+    }
+    if (!session.studentId || !session.studentId.userId) {
+      console.error("❌ Student user data is missing:", session.studentId);
+      return res.status(500).json({ message: "Student user data is missing." });
+    }
+
+    console.log("✅ Tutor Data:", session.tutorId.userId);
+    console.log("✅ Student Data:", session.studentId.userId);
+    console.log(
+      "Jitsi api keys, app id:",
+      JAAAS_APP_ID,
+      "api key: ",
+      JAAAS_API_KEY,
+      "secret: ",
+      JAAAS_SECRET,
+      "private key: ",
+      privateKey
+    );
+    // Generate JWT Token for JaaS
+    const payload = {
+      aud: "jitsi",
+      iss: "chat", // Your JaaS API Key
+      sub: JAAAS_APP_ID, // Your JaaS App ID
+      room: "*", // Allow joining any room
+      exp: Math.floor(Date.now() / 1000) + 3600, // Token valid for 1 hour
+      context: {
+        user: {
+          avatar: session.tutorId.profileImage || "",
+          name: session.tutorId.userId.name || "Tutor",
+          email: session.tutorId.userId.email || "tutor@example.com",
+          id: session.tutorId.userId._id.toString(),
+          moderator: true,
+        },
+        features: {
+          livestreaming: false,
+          recording: false,
+          outboundCall: false,
+          transcription: false,
+        },
+      },
+    };
+
+    const token = jwt.sign(payload, privateKey, {
+      algorithm: "RS256",
+      header: {
+        kid: JAAAS_SECRET,
+        typ: "JWT",
+      },
+    });
+    console.log("✅ Jitsi JWT Token:", token);
+    res.status(200).json({ success: true, token });
+  } catch (error) {
+    console.error("❌ Error generating Jitsi JWT token:", error);
+    res.status(500).json({ message: "Failed to generate JWT token." });
+  }
+}
 
 /**
  * Get session room details
  */
+
 async function getSessionRoom(req, res) {
   try {
     const { bookingId } = req.params;
@@ -157,4 +244,4 @@ async function endSession(req, res) {
   }
 }
 
-module.exports = { getSessionRoom, startSession, endSession };
+module.exports = { getSessionRoom, startSession, endSession, getJaaSToken };
