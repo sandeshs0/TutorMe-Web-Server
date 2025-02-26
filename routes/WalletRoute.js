@@ -6,18 +6,18 @@ const { authenticateToken } = require("../security/Auth");
 const router = express.Router();
 
 // Initiate transaction
-router.post("/initiate", WalletController.initiateTransaction);
+router.post(
+  "/initiate",
+  authenticateToken,
+  WalletController.initiateTransaction
+);
 
 // Verify transaction
 router.post("/verify", WalletController.verifyTransaction);
 
 // Get wallet balance
-router.get("/:studentId/balance", WalletController.getWalletBalance);
+router.get("/balance", authenticateToken, WalletController.getWalletBalance);
 
-router.get(
-  "/history",
-  authenticateToken,
-  WalletController.getTransactions
-);
+router.get("/history", authenticateToken, WalletController.getTransactions);
 
 module.exports = router;

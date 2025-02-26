@@ -14,6 +14,5 @@ router.post(
     authenticateToken,
     changePassword,
   );
-
-
+  
 module.exports=router;

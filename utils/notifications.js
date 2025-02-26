@@ -1,5 +1,6 @@
 const Notification = require("../model/Notification");
 
+
 const sendRealTimeUpdate = (userId, event, data) => {
   if (!userId) {
     console.error("Invalid userId provided for WebSocket event.");
