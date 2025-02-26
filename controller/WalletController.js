@@ -9,8 +9,11 @@ const WalletController = {
 
   // Initiate a transaction
   async initiateTransaction(req, res) {
-    const { studentId, amount, paymentGateway } = req.body;
+    const { amount, paymentGateway } = req.body;
+    const userId = req.user.id;
 
+    const student = await Student.findOne({ userId });
+    studentId = student._id;
     try {
       if (!studentId || !amount) {
         return res.status(400).json({
@@ -52,15 +55,15 @@ const WalletController = {
       const khaltiResponse = await axios.post(
         "https://dev.khalti.com/api/v2/epayment/initiate/",
         {
-          return_url: "http://localhost:5173/payment-callback", // Replace with your return URL
+          return_url: "http://localhost:5173/payment-callback", 
           website_url: "http://localhost:5173",
-          amount: amount * 100, // Convert amount to paisa
+          amount: amount * 100, 
           purchase_order_id,
           purchase_order_name,
         },
         {
           headers: {
-            Authorization: `Key 59bc2858051d4983b53fd1b2033e9052`, // Replace with your secret key
+            Authorization: `Key 59bc2858051d4983b53fd1b2033e9052`,
             "Content-Type": "application/json",
           },
         }
@@ -159,11 +162,15 @@ const WalletController = {
 
   // Fetch wallet balance
   async getWalletBalance(req, res) {
-    const { studentId } = req.params;
+    // const { studentId } = req.params;
 
     try {
+      const userId = req.user.id;
+
+      const student = await Student.findOne({ userId });
+
       // Fetch the student's wallet balance
-      const student = await Student.findById(studentId);
+      // const student = await Student.findById(studentId);
 
       if (!student) {
         return res.status(404).json({
@@ -229,48 +236,47 @@ const WalletController = {
   //     });
   //   }
   // },
-  
+
   async getTransactions(req, res) {
     const userId = req.user.id; // Extract userId from authenticated user
 
     try {
-        // Find the student associated with this user
-        const student = await Student.findOne({ userId });
+      // Find the student associated with this user
+      const student = await Student.findOne({ userId });
 
-        if (!student) {
-            return res.status(404).json({
-                success: false,
-                message: "Student profile not found.",
-            });
-        }
-
-        // Fetch transactions for this student
-        const transactions = await Transaction.find({
-            studentId: student._id, // Use student's ObjectId
-            status: "success",
-        }).select("paymentDate paymentGateway amount");
-
-        if (!transactions.length) {
-            return res.status(404).json({
-                success: false,
-                message: "No successful transactions found.",
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            transactions,
+      if (!student) {
+        return res.status(404).json({
+          success: false,
+          message: "Student profile not found.",
         });
+      }
+
+      // Fetch transactions for this student
+      const transactions = await Transaction.find({
+        studentId: student._id, // Use student's ObjectId
+        status: "success",
+      }).select("paymentDate paymentGateway amount");
+
+      if (!transactions.length) {
+        return res.status(404).json({
+          success: false,
+          message: "No successful transactions found.",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        walletBalance: student.walletBalance,
+        transactions,
+      });
     } catch (err) {
-        console.error("Error fetching transaction history:", err.message);
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch transaction history",
-        });
+      console.error("Error fetching transaction history:", err.message);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch transaction history",
+      });
     }
-}
-
-
+  },
 };
 
 module.exports = WalletController;
