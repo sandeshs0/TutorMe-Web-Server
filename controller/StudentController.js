@@ -21,6 +21,7 @@ const getAllStudents = async (req, res) => {
 
 // Fetch student profile (Authenticated student)
 const getStudentProfile = async (req, res) => {
+  console.log("Fetching profile student ", req.user);
   try {
     const studentId = req.user.id;
 
@@ -43,7 +44,7 @@ const getStudentProfile = async (req, res) => {
     };
     res.status(200).json({
       message: "Student profile fetched successfully",
-      student:responseToSend,
+      student: responseToSend,
     });
   } catch (error) {
     console.error("Error fetching student profile:", error);
@@ -53,6 +54,7 @@ const getStudentProfile = async (req, res) => {
 
 // Update student profile
 const updateStudentProfile = async (req, res) => {
+  console.log("Updating student profile ", req.body);
   try {
     const studentId = req.user.id;
     const { name, email, phone } = req.body;
@@ -65,6 +67,7 @@ const updateStudentProfile = async (req, res) => {
       { name, email, phone },
       { new: true }
     );
+    console.log("Updated user ", updatedUser);
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
@@ -79,6 +82,7 @@ const updateStudentProfile = async (req, res) => {
       message: "Profile updated successfully",
       updatedStudent,
     });
+    console.log("Updated student ", updatedStudent);
   } catch (error) {
     console.error("Error updating student profile:", error);
     res.status(500).json({ message: "Failed to update student profile" });
