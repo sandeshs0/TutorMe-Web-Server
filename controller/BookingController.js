@@ -45,6 +45,7 @@ const BookingController = {
    * Create a new booking request
    */
   async createBooking(req, res) {
+    console.log("creating booking: ", req.body);
     try {
       const { tutorId, date, time, note } = req.body;
       const student = await Student.findOne({ userId: req.user.id });
@@ -121,6 +122,7 @@ const BookingController = {
         message: "Booking request created successfully.",
         booking,
       });
+      console.log("booking created");
     } catch (error) {
       console.error("❌ Error creating booking:", error);
       res.status(500).json({ message: "Failed to create booking" });
@@ -316,6 +318,90 @@ const BookingController = {
   /**
    * Fetch all bookings for a student
    */
+  // async getStudentBookings(req, res) {
+  //   try {
+  //     const student = await Student.findOne({ userId: req.user.id });
+  //     if (!student) {
+  //       return res.status(403).json({ message: "Unauthorized." });
+  //     }
+
+  //     const bookings = await Booking.find({ studentId: student._id }).populate(
+  //       "tutorId",
+  //       "id name profileImage hourlyRate"
+  //     );
+  //     res.status(200).json({ bookings });
+  //   } catch (error) {
+  //     console.error("Error fetching student bookings:", error);
+  //     res.status(500).json({ message: "Failed to fetch bookings" });
+  //   }
+  // },
+
+  // async getStudentBookings(req, res) {
+  //   try {
+  //     const student = await Student.findOne({ userId: req.user.id });
+  //     if (!student) {
+  //       return res.status(403).json({ message: "Unauthorized." });
+  //     }
+
+  //     const bookings = await Booking.find({ studentId: student._id }).populate(
+  //       "tutorId",
+  //       "_id name profileImage hourlyRate"
+  //     );
+
+  //     // Transform the response to replace _id with id in tutorId
+  //     const modifiedBookings = bookings.map((booking) => ({
+  //       ...booking.toObject(),
+  //       tutorId: {
+  //         id: booking.tutorId._id, // Change _id to id
+  //         name: booking.tutorId.name,
+  //         profileImage: booking.tutorId.profileImage,
+  //         hourlyRate: booking.tutorId.hourlyRate,
+  //       },
+  //     }));
+
+  //     res.status(200).json({ bookings: modifiedBookings });
+  //   } catch (error) {
+  //     console.error("Error fetching student bookings:", error);
+  //     res.status(500).json({ message: "Failed to fetch bookings" });
+  //   }
+  // },
+
+  // async getStudentBookings(req, res) {
+  //   try {
+  //     const student = await Student.findOne({ userId: req.user.id });
+  //     if (!student) {
+  //       return res.status(403).json({ message: "Unauthorized." });
+  //     }
+
+  //     const bookings = await Booking.find({ studentId: student._id })
+  //       .populate("tutorId", "_id name profileImage hourlyRate")
+  //       .select("-createdAt -updatedAt -__v")
+  //       .sort({ createdAt: -1 });
+
+  //     // Transform the response to replace tutorId with tutorObj
+  //     const modifiedBookings = bookings.map((booking) => {
+  //       const bookingObj = booking.toObject(); // Convert Mongoose document to plain object
+  //       const { tutorId, ...rest } = bookingObj; // Destructure to remove tutorId
+
+  //       return {
+  //         ...rest,
+  //         tutorId: tutorId._id,
+  //         tutorObj: {
+  //           id: tutorId._id, // Change _id to id
+  //           name: tutorId.name,
+  //           profileImage: tutorId.profileImage,
+  //           hourlyRate: tutorId.hourlyRate,
+  //         },
+  //       };
+  //     });
+
+  //     res.status(200).json({ bookings: modifiedBookings });
+  //   } catch (error) {
+  //     console.error("Error fetching student bookings:", error);
+  //     res.status(500).json({ message: "Failed to fetch bookings" });
+  //   }
+  // },
+
   async getStudentBookings(req, res) {
     try {
       const student = await Student.findOne({ userId: req.user.id });
@@ -323,11 +409,26 @@ const BookingController = {
         return res.status(403).json({ message: "Unauthorized." });
       }
 
-      const bookings = await Booking.find({ studentId: student._id }).populate(
-        "tutorId",
-        "name profileImage hourlyRate"
-      );
-      res.status(200).json({ bookings });
+      const bookings = await Booking.find({ studentId: student._id })
+        .populate("tutorId", "_id name profileImage hourlyRate")
+        .select("-createdAt -updatedAt -__v")
+        .sort({ createdAt: -1 });
+
+      // Transform the response to replace tutorId with tutorObj
+      const modifiedBookings = bookings.map((booking) => {
+        const bookingObj = booking.toObject(); // Convert Mongoose document to plain object
+        const { tutorId, ...rest } = bookingObj; // Destructure to remove tutorId
+
+        return {
+          ...rest,
+          tutorId: tutorId._id, // Change _id to id
+          tutorName: "Test Name",
+          profileImage: tutorId.profileImage,
+          hourlyRate: tutorId.hourlyRate,
+        };
+      });
+
+      res.status(200).json({ bookings: modifiedBookings });
     } catch (error) {
       console.error("Error fetching student bookings:", error);
       res.status(500).json({ message: "Failed to fetch bookings" });

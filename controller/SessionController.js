@@ -244,4 +244,103 @@ async function endSession(req, res) {
   }
 }
 
-module.exports = { getSessionRoom, startSession, endSession, getJaaSToken };
+const getTutorSessions = async (req, res) => {
+  try {
+    const tutor = await Tutor.findOne({ userId: req.user.id });
+    if (!tutor) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized. Tutor not found." });
+    }
+
+    const sessions = await Session.find({ tutorId: tutor._id })
+      .populate("studentId", "userId")
+      .populate({
+        path: "studentId",
+        populate: { path: "userId", select: "name email profileImage" },
+      })
+      .select("-__v -createdAt -updatedAt")
+      .sort({ date: -1 });
+
+    const modifiedSessions = sessions.map((session) => ({
+      sessionId: session._id,
+      bookingId: session.bookingId,
+      studentId: session.studentId._id,
+      studentName: session.studentId.userId.name,
+      studentEmail: session.studentId.userId.email,
+      profileImage: session.studentId.userId.profileImage,
+      roomId: session.roomId,
+      date: session.date,
+      startTime: session.startTime,
+      endTime: session.endTime,
+      status: session.status,
+      duration: session.duration,
+      actualDuration: session.actualDuration,
+      totalFee: session.totalFee,
+      platformFee: session.platformFee,
+      tutorEarnings: session.tutorEarnings,
+    }));
+
+    res.status(200).json({ success: true, sessions: modifiedSessions });
+  } catch (error) {
+    console.error("Error fetching tutor sessions:", error);
+    res.status(500).json({ message: "Failed to fetch tutor sessions." });
+  }
+};
+
+const getStudentSessions = async (req, res) => {
+  try {
+    const student = await Student.findOne({ userId: req.user.id });
+    if (!student) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized. Student not found." });
+    }
+    // Ensure the student's ID is a valid ObjectId
+    // if (!mongoose.Types.ObjectId.isValid(student._id)) {
+    //   return res.status(400).json({ message: "Invalid student ID." });
+    // }
+
+    const sessions = await Session.find({ studentId: student._id })
+      .populate("tutorId", "userId")
+      .populate({
+        path: "tutorId",
+        populate: { path: "userId", select: "name email profileImage" },
+      })
+      .select("-__v -createdAt -updatedAt")
+      .sort({ date: -1 });
+
+    const modifiedSessions = sessions.map((session) => ({
+      sessionId: session._id,
+      bookingId: session.bookingId,
+      tutorId: session.tutorId._id,
+      tutorName: session.tutorId.userId.name,
+      tutorEmail: session.tutorId.userId.email,
+      profileImage: session.tutorId.userId.profileImage,
+      roomId: session.roomId,
+      date: session.date,
+      startTime: session.startTime,
+      endTime: session.endTime,
+      status: session.status,
+      duration: session.duration,
+      actualDuration: session.actualDuration,
+      totalFee: session.totalFee,
+      platformFee: session.platformFee,
+      tutorEarnings: session.tutorEarnings,
+    }));
+
+    res.status(200).json({ success: true, sessions: modifiedSessions });
+  } catch (error) {
+    console.error("Error fetching student sessions:", error);
+    res.status(500).json({ message: "Failed to fetch student sessions." });
+  }
+};
+
+module.exports = {
+  getSessionRoom,
+  startSession,
+  endSession,
+  getJaaSToken,
+  getTutorSessions,
+  getStudentSessions,
+};
