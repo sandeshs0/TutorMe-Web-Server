@@ -410,7 +410,10 @@ const BookingController = {
       }
 
       const bookings = await Booking.find({ studentId: student._id })
-        .populate("tutorId", "_id name profileImage hourlyRate")
+        .populate({
+          path:"tutorId",
+          populate: {path :"userId", select: "name"}
+        })
         .select("-createdAt -updatedAt -__v")
         .sort({ createdAt: -1 });
 
@@ -422,7 +425,7 @@ const BookingController = {
         return {
           ...rest,
           tutorId: tutorId._id, // Change _id to id
-          tutorName: "Test Name",
+          tutorName: tutorId.userId.name,
           profileImage: tutorId.profileImage,
           hourlyRate: tutorId.hourlyRate,
         };
