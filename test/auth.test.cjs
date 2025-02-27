@@ -130,7 +130,7 @@ describe("Auth API", () => {
           );
           done();
         });
-    }, 1000); // ✅ Wait 1 second before checking DB for OTP
+    }, 1000);
   });
 
   it("should login a user", (done) => {
