@@ -12,6 +12,23 @@ describe("Tutor API", () => {
   let tutorToken;
   let tutorUsername = "tutor1740646635116";
 
+  before((done) => {
+    chai
+      .request(app)
+      .post("/auth/login")
+      .set("Content-Type", "application/json")
+      .send({
+        email: "tutor1740646631122@example.com",
+        password: "Password123",
+      })
+      .end((err, res) => {
+        expect(res).to.have.status(200);
+        expect(res.body).to.have.property("token");
+        tutorToken = res.body.token;
+        done();
+      });
+  });
+
   it("should fetch all tutors", (done) => {
     chai
       .request(app)
