@@ -19,6 +19,8 @@ const SessionRoute = require("./routes/SessionRoute");
 const app = express();
 const server = http.createServer(app); // ✅ Create HTTP Server
 
+module.exports = { app };
+
 global.io = socketIo(server, {
   cors: {
     origin: "http://localhost:5173", // Allow frontend connection
@@ -85,19 +87,28 @@ app.use(
 app.use(express.json());
 
 // ✅ Routes
+app.use("/auth", AuthRoute);
 app.use("/api/users", UserRoute);
 app.use("/api/tutors", TutorRoute);
 app.use("/api/subjects", SubjectRoute);
 app.use("/api/student", StudentRoute);
-app.use("/auth", AuthRoute);
 app.use("/api/transaction", WalletRoute);
 app.use("/api/bookings", BookingRoute);
 app.use("/api/notifications", NotificationRoute);
 app.use("/api/sessions", SessionRoute);
 
 const port = 3000;
-server.listen(port, () => {
-  console.log(`✅ Server Running at http://localhost:${port}`);
-});
+// server.listen(port, () => {
+//   console.log(`✅ Server Running at http://localhost:${port}`);
+// });
 
-module.exports = { app };
+// module.exports = { app };
+
+if (process.env.NODE_ENV !== "test") {
+  server.listen(port, () => {
+    console.log(`✅ Server Running at http://localhost:${port}`);
+  });
+}
+
+// ✅ Export both `app` and `server` for testing
+module.exports = { app, server };
