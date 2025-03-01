@@ -15,6 +15,7 @@ const BookingRoute = require("./routes/BookingRoute");
 const connectedUsers = require("./socketStore");
 const NotificationRoute = require("./routes/NotificationRoute");
 const SessionRoute = require("./routes/SessionRoute");
+const EarningRoute = require("./routes/EarningRoute");
 
 const app = express();
 const server = http.createServer(app); // ✅ Create HTTP Server
@@ -23,7 +24,7 @@ module.exports = { app };
 
 global.io = socketIo(server, {
   cors: {
-    origin: "http://localhost:5174", // Allow frontend connection
+    origin: "http://localhost:5173", // Allow frontend connection
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true, // ✅ Fix CORS issue
   },
@@ -79,7 +80,7 @@ connectDb();
 // ✅ Middlewares
 app.use(
   cors({
-    origin: "http://localhost:5174",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -96,6 +97,7 @@ app.use("/api/transaction", WalletRoute);
 app.use("/api/bookings", BookingRoute);
 app.use("/api/notifications", NotificationRoute);
 app.use("/api/sessions", SessionRoute);
+app.use("/api/earning", EarningRoute);
 
 const port = 3000;
 // server.listen(port, () => {

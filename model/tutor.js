@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const tutorSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    // name: { type: String},
     bio: { type: String, required: true },
     description: { type: String, required: true },
     hourlyRate: { type: Number, required: true },

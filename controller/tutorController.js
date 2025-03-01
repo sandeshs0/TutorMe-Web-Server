@@ -5,35 +5,224 @@ const bcrypt = require("bcrypt");
 const cloudinary = require("../utils/cloudinary");
 
 // Fetch all tutors
+// const getTutors = async (req, res) => {
+//   try {
+//     const {
+//       subject,
+//       minHourlyRate,
+//       maxHourlyRate,
+//       page = 1,
+//       limit = 10,
+//     } = req.query;
+
+//     const query = {};
+//     if (subject) {
+//       const subjectDoc = await Subject.findOne({ name: subject });
+//       if (subjectDoc) query.subjects = subjectDoc._id;
+//     }
+//     if (minHourlyRate)
+//       query.hourlyRate = { ...query.hourlyRate, $gte: Number(minHourlyRate) };
+//     if (maxHourlyRate)
+//       query.hourlyRate = { ...query.hourlyRate, $lte: Number(maxHourlyRate) };
+
+//     const tutors = await Tutor.find(query)
+//       .populate("userId", "name profileImage email username") // Only populate public fields
+//       .populate("subjects", "name") // Only fetch subject names
+//       .skip((page - 1) * limit)
+//       .limit(Number(limit));
+
+//     const totalTutors = await Tutor.countDocuments(query);
+
+//     // Filter out sensitive data from the response
+//     const filteredTutors = tutors.map((tutor) => ({
+//       id: tutor._id,
+//       name: tutor.userId?.name,
+//       profileImage: tutor.profileImage,
+//       email: tutor.userId?.email,
+//       username: tutor.userId?.username,
+//       bio: tutor.bio,
+//       description: tutor.description,
+//       hourlyRate: tutor.hourlyRate,
+//       rating: tutor.rating,
+//       subjects: tutor.subjects.map((subject) => subject.name), // Include subject names only
+//       availability: tutor.availability,
+//     }));
+
+//     res.status(200).json({
+//       message: "Tutors fetched successfully",
+//       tutors: filteredTutors,
+//       pagination: {
+//         currentPage: Number(page),
+//         totalPages: Math.ceil(totalTutors / limit),
+//         totalTutors,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error fetching tutors:", error);
+//     res.status(500).json({ message: "Failed to fetch tutors" });
+//   }
+// };
+
+// const getTutors = async (req, res) => {
+//   try {
+//     const {
+//       subject,
+//       minHourlyRate,
+//       maxHourlyRate,
+//       minRating,
+//       maxRating,
+//       search,
+//       sortBy,
+//       sortOrder = "asc",
+//       page = 1,
+//       limit = 10,
+//     } = req.query;
+
+//     const query = {};
+
+//     // 🔍 Search by name, username, or bio
+//     if (search) {
+//       query.$or = [
+//         { bio: { $regex: search, $options: "i" } },
+//         { description: { $regex: search, $options: "i" } },
+//       ];
+//     }
+
+//     // 🎯 Filter by subject
+//     if (subject) {
+//       const subjectDoc = await Subject.findOne({ name: subject });
+//       if (subjectDoc) query.subjects = subjectDoc._id;
+//     }
+
+//     if (minHourlyRate)
+//       query.hourlyRate = { ...query.hourlyRate, $gte: Number(minHourlyRate) };
+//     if (maxHourlyRate)
+//       query.hourlyRate = { ...query.hourlyRate, $lte: Number(maxHourlyRate) };
+
+//           if (minRating)
+//       query.rating = { ...query.rating, $gte: Number(minRating) };
+//     if (maxRating)
+//       query.rating = { ...query.rating, $lte: Number(maxRating) };
+
+//     const sortOptions = {};
+//     if (sortBy) {
+//       const validSortFields = ["hourlyRate", "rating", "name"];
+//       if (validSortFields.includes(sortBy)) {
+//         sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
+//       }
+//     }
+
+//     // Fetch tutors with filters, sorting, and pagination
+//     const tutors = await Tutor.find(query)
+//       .populate("userId", "name profileImage email username") // Fetch user details
+//       .populate("subjects", "name") // Fetch subject names
+//       .sort(sortOptions)
+//       .skip((page - 1) * limit)
+//       .limit(Number(limit));
+
+//     const totalTutors = await Tutor.countDocuments(query);
+
+//     // Format response
+//     const filteredTutors = tutors.map((tutor) => ({
+//       id: tutor._id,
+//       name: tutor.userId?.name,
+//       profileImage: tutor.profileImage,
+//       email: tutor.userId?.email,
+//       username: tutor.userId?.username,
+//       bio: tutor.bio,
+//       description: tutor.description,
+//       hourlyRate: tutor.hourlyRate,
+//       rating: tutor.rating,
+//       subjects: tutor.subjects.map((subject) => subject.name),
+//       availability: tutor.availability,
+//     }));
+
+//     res.status(200).json({
+//       message: "Tutors fetched successfully",
+//       tutors: filteredTutors,
+//       pagination: {
+//         currentPage: Number(page),
+//         totalPages: Math.ceil(totalTutors / limit),
+//         totalTutors,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error fetching tutors:", error);
+//     res.status(500).json({ message: "Failed to fetch tutors" });
+//   }
+// };
+
 const getTutors = async (req, res) => {
   try {
     const {
       subject,
       minHourlyRate,
       maxHourlyRate,
+      minRating,
+      maxRating,
+      search,
+      sortBy,
+      sortOrder = "asc",
       page = 1,
       limit = 10,
     } = req.query;
 
     const query = {};
+
+    // 🎯 Search by name, username, bio, or description
+    if (search) {
+      const userSearchQuery = { 
+        $or: [
+          { name: { $regex: search, $options: "i" } }, // Search by name
+          { username: { $regex: search, $options: "i" } }, // Search by username
+        ],
+      };
+
+      // Find matching users first
+      const users = await User.find(userSearchQuery).select("_id");
+      const userIds = users.map(user => user._id);
+
+      query.$or = [
+        { userId: { $in: userIds } }, // Match user IDs from search
+        { bio: { $regex: search, $options: "i" } }, // Match bio
+        { description: { $regex: search, $options: "i" } }, // Match description
+      ];
+    }
+
+    // 🎯 Filter by subject
     if (subject) {
       const subjectDoc = await Subject.findOne({ name: subject });
       if (subjectDoc) query.subjects = subjectDoc._id;
     }
-    if (minHourlyRate)
-      query.hourlyRate = { ...query.hourlyRate, $gte: Number(minHourlyRate) };
-    if (maxHourlyRate)
-      query.hourlyRate = { ...query.hourlyRate, $lte: Number(maxHourlyRate) };
 
+    // 🎯 Filter by hourly rate
+    if (minHourlyRate) query.hourlyRate = { ...query.hourlyRate, $gte: Number(minHourlyRate) };
+    if (maxHourlyRate) query.hourlyRate = { ...query.hourlyRate, $lte: Number(maxHourlyRate) };
+
+    // 🎯 Filter by rating
+    if (minRating) query.rating = { ...query.rating, $gte: Number(minRating) };
+    if (maxRating) query.rating = { ...query.rating, $lte: Number(maxRating) };
+
+    // 🔀 Sorting logic
+    const sortOptions = {};
+    if (sortBy) {
+      const validSortFields = ["hourlyRate", "rating", "name"];
+      if (validSortFields.includes(sortBy)) {
+        sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
+      }
+    }
+
+    // Fetch tutors with filters, sorting, and pagination
     const tutors = await Tutor.find(query)
-      .populate("userId", "name profileImage email username") // Only populate public fields
-      .populate("subjects", "name") // Only fetch subject names
+      .populate("userId", "name profileImage email username") // Fetch user details
+      .populate("subjects", "name") // Fetch subject names
+      .sort(sortOptions)
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
     const totalTutors = await Tutor.countDocuments(query);
 
-    // Filter out sensitive data from the response
+    // Format response
     const filteredTutors = tutors.map((tutor) => ({
       id: tutor._id,
       name: tutor.userId?.name,
@@ -44,7 +233,7 @@ const getTutors = async (req, res) => {
       description: tutor.description,
       hourlyRate: tutor.hourlyRate,
       rating: tutor.rating,
-      subjects: tutor.subjects.map((subject) => subject.name), // Include subject names only
+      subjects: tutor.subjects.map((subject) => subject.name),
       availability: tutor.availability,
     }));
 
@@ -62,6 +251,7 @@ const getTutors = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch tutors" });
   }
 };
+
 
 // Update Tutor Profile
 
