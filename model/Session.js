@@ -62,6 +62,10 @@ const SessionSchema = new mongoose.Schema(
       type: Number,
       default: 0, // Will be calculated at the end of the session
     },
+    roomPassword:{
+      type: String,
+      default: null,
+    }
   },
   {
     timestamps: true, // Automatically creates createdAt and updatedAt fields

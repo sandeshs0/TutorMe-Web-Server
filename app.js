@@ -23,7 +23,7 @@ module.exports = { app };
 
 global.io = socketIo(server, {
   cors: {
-    origin: "http://localhost:5173", // Allow frontend connection
+    origin: "http://localhost:5174", // Allow frontend connection
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true, // ✅ Fix CORS issue
   },
@@ -79,7 +79,7 @@ connectDb();
 // ✅ Middlewares
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5174",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })

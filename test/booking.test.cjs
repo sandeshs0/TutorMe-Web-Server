@@ -76,7 +76,6 @@ describe("Booking API", () => {
       });
   });
 
-
   it("should fetch all student bookings", (done) => {
     chai
       .request(app)
@@ -100,5 +99,4 @@ describe("Booking API", () => {
         done();
       });
   });
-
 });
