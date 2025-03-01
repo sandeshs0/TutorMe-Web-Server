@@ -1,11 +1,13 @@
 const Booking = require("../model/Booking");
 const Student = require("../model/student");
 const Tutor = require("../model/tutor");
+const Earning = require("../model/Earning");
 const Session = require("../model/Session");
 const User = require("../model/user");
 const Transaction = require("../model/Transaction"); // Track transactions
 const { sendNotification } = require("../utils/notifications"); // Notification utility
 const { date } = require("joi");
+
 // const { io } = require("../app"); // Import io properly
 // const connectedUsers = require("../socketStore");
 
@@ -185,7 +187,20 @@ const BookingController = {
       //   booking,
       //   sessionRoom,
       // });
-
+      const tutorEarning = new Earning({
+        tutorId: tutor._id,
+        studentId: booking.studentId,
+        amount: BOOKING_FEE,
+        type: "BookingFee",
+      });
+      await tutorEarning.save();
+      // Add booking fee from student's wallet
+      tutor.walletBalance += BOOKING_FEE;
+      await tutor.save();
+      sendNotification(
+        tutor.userId,
+        "You have accepted a session request. Booking fee credited!"
+      );
       res.status(200).json({
         success: true,
         message: "Booking accepted.",
@@ -411,8 +426,8 @@ const BookingController = {
 
       const bookings = await Booking.find({ studentId: student._id })
         .populate({
-          path:"tutorId",
-          populate: {path :"userId", select: "name"}
+          path: "tutorId",
+          populate: { path: "userId", select: "name" },
         })
         .select("-createdAt -updatedAt -__v")
         .sort({ createdAt: -1 });

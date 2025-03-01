@@ -2,6 +2,7 @@ const Session = require("../model/Session");
 const Student = require("../model/student");
 const Tutor = require("../model/tutor");
 const User = require("../model/user");
+const Earning = require("../model/Earning");
 const Transaction = require("../model/Transaction");
 const { sendNotification } = require("../utils/notifications");
 const jwt = require("jsonwebtoken");
@@ -430,23 +431,24 @@ async function endSession(req, res) {
     }
 
     student.walletBalance -= totalCharge;
+    const earning = new Earning({
+      tutorId: tutor._id,
+      studentId: session.studentId,
+      amount: tutorEarnings,
+      type: "SessionFee",
+    });
+    await earning.save();
     tutor.walletBalance += tutorEarnings;
     await Promise.all([student.save(), tutor.save()]);
 
-    // await Transaction.create({
-    //   studentId: student._id,
-    //   // tutorId: tutor._id,
-    //   amount: totalCharge,
-    //   // platformFee,
-    //   // netEarnings: tutorEarnings,
-    //   status: "success",
-    // });
-
     sendNotification(
       student.userId,
-      "Your session has ended. Payment deducted."
+      `Your session has ended. Rs.${totalCharge} has been deducted from your wallet.`
     );
-    sendNotification(tutor.userId, "Session completed. Earnings credited.");
+    sendNotification(
+      tutor.userId,
+      `Bravo! Session completed. Rs. ${tutorEarnings} credited!`
+    );
 
     res.status(200).json({
       success: true,
@@ -454,6 +456,7 @@ async function endSession(req, res) {
       duration: durationInHours,
       totalCharge,
     });
+    console.log("Session ended successfully.");
   } catch (error) {
     console.error("Error ending session:", error);
     res.status(500).json({ message: "Failed to end session." });
