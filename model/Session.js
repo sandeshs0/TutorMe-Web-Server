@@ -30,11 +30,11 @@ const SessionSchema = new mongoose.Schema(
       required: true,
     },
     endTime: {
-      type: String, // Stored in HH:mm format
+      type: String, 
       default: null, // Will be set when session ends
     },
     duration: {
-      type: Number, // Estimated duration before the session starts
+      type: Number, 
       default: 0, // Updated after the session ends
     },
     actualDuration: {
@@ -48,19 +48,19 @@ const SessionSchema = new mongoose.Schema(
     },
     hourlyRate: {
       type: Number,
-      required: true, // Store tutor's hourly rate
+      required: true, 
     },
     totalFee: {
       type: Number,
-      default: 0, // Will be calculated at the end of the session
+      default: 0, 
     },
     platformFee: {
       type: Number,
-      default: 0, // Will be calculated at the end of the session
+      default: 0, 
     },
     tutorEarnings: {
       type: Number,
-      default: 0, // Will be calculated at the end of the session
+      default: 0, 
     },
     roomPassword:{
       type: String,
@@ -68,7 +68,7 @@ const SessionSchema = new mongoose.Schema(
     }
   },
   {
-    timestamps: true, // Automatically creates createdAt and updatedAt fields
+    timestamps: true, 
   }
 );
 

@@ -2,14 +2,13 @@ const mongoose = require("mongoose");
 
 const tutorSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    // name: { type: String},
     bio: { type: String, required: true },
     description: { type: String, required: true },
     hourlyRate: { type: Number, required: true },
     subjects: [{ type: mongoose.Schema.Types.ObjectId, ref: "Subject" }],
-    availability: { type: String }, // JSON or structured format
+    availability: { type: String },
     rating: { type: Number, default: 0 },
-    walletBalance: { type: Number, default: 0 }, // Earnings balance
+    walletBalance: { type: Number, default: 0 },
     dateJoined: { type: Date, default: Date.now },
     profileImage: { type: String },
 });

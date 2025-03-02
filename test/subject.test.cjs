@@ -1,4 +1,4 @@
-const { app } = require("../app.js"); // ✅ Use only `app`, not `server`
+const { app } = require("../app.js");
 const chai = require("chai");
 const chaiHttp = require("chai-http");
 const mongoose = require("mongoose");

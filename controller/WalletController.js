@@ -1,3 +1,4 @@
+const { solar } = require("googleapis/build/src/apis/solar");
 const Transaction = require("../model/Transaction");
 const Student = require("../model/student");
 const axios = require("axios");
@@ -5,9 +6,7 @@ const KHALTI_SECRET = process.env.KHALTI_SECRET_KEY;
 const KHALTI_PUBLIC = process.env.KHALTI_PUBLIC_KEY;
 
 const WalletController = {
-  // TYest
 
-  // Initiate a transaction
   async initiateTransaction(req, res) {
     const { amount, paymentGateway } = req.body;
     const userId = req.user.id;
@@ -90,7 +89,6 @@ const WalletController = {
     }
   },
 
-  // Verify a transaction
   async verifyTransaction(req, res) {
     const { pidx, transaction_id } = req.body;
 
@@ -109,7 +107,7 @@ const WalletController = {
         },
         {
           headers: {
-            Authorization: `Key 0b353ee393f14dd48743e73b7306ed14`, // Replace with your secret key
+            Authorization: `Key 0b353ee393f14dd48743e73b7306ed14`,
           },
         }
       );
@@ -130,7 +128,6 @@ const WalletController = {
         transaction.status = "success";
         await transaction.save();
 
-        // Increment the student's wallet balance
         await Student.findByIdAndUpdate(transaction.studentId, {
           $inc: { walletBalance: total_amount / 100 },
         });
@@ -159,8 +156,6 @@ const WalletController = {
       });
     }
   },
-
-  // Fetch wallet balance
   async getWalletBalance(req, res) {
     // const { studentId } = req.params;
 
@@ -169,7 +164,6 @@ const WalletController = {
 
       const student = await Student.findOne({ userId });
 
-      // Fetch the student's wallet balance
       // const student = await Student.findById(studentId);
 
       if (!student) {
@@ -192,56 +186,10 @@ const WalletController = {
     }
   },
 
-  // Fetch all transactions for a student
-  // async getTransactions(req, res) {
-  //   const { studentId } = req.params;
-
-  //   // Ensure the user is authenticated
-  //   if (!req.user) {
-  //     return res.status(401).json({
-  //       success: false,
-  //       message: "Unauthorized. Please log in.",
-  //     });
-  //   }
-  //   // Ensure the user is only accessing their own transaction history
-  //   if (req.user.id !== studentId) {
-  //     return res.status(403).json({
-  //       success: false,
-  //       message: "Forbidden. You can only view your own transaction history.",
-  //     });
-  //   }
-
-  //   try {
-  //     // Fetch all transactions for the student
-  //     const transactions = await Transaction.find({
-  //       studentId,
-  //       status: "success",
-  //     }).select("paymentGateway amount paymentDate");
-
-  //     if (!transactions.length) {
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: "No successful transactions found",
-  //       });
-  //     }
-  //     res.status(200).json({
-  //       success: true,
-  //       transactions,
-  //     });
-  //   } catch (err) {
-  //     console.error("Error fetching transactions:", err.message);
-  //     res.status(500).json({
-  //       success: false,
-  //       message: "Failed to fetch transactions",
-  //     });
-  //   }
-  // },
-
   async getTransactions(req, res) {
-    const userId = req.user.id; // Extract userId from authenticated user
+    const userId = req.user.id;
 
     try {
-      // Find the student associated with this user
       const student = await Student.findOne({ userId });
 
       if (!student) {
@@ -251,11 +199,11 @@ const WalletController = {
         });
       }
 
-      // Fetch transactions for this student
       const transactions = await Transaction.find({
-        studentId: student._id, // Use student's ObjectId
+        studentId: student._id, 
         status: "success",
-      }).select("paymentDate paymentGateway amount");
+      }).select("paymentDate paymentGateway amount")
+      .sort({ paymentDate: -1 }); 
 
       if (!transactions.length) {
         return res.status(404).json({

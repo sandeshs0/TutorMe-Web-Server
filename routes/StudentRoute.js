@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 // const upload = require("../utils/multerConfig");
-const { uploadStudent } = require("../utils/multerConfig"); // Import explicitly
+const { uploadStudent } = require("../utils/multerConfig");
 
 const {
   authenticateToken,
@@ -13,8 +13,8 @@ const {
   updateStudentProfile,
 } = require("../controller/StudentController");
 
-router.get("/all", authenticateToken, authorizeRole("admin"), getAllStudents); // Admin only
-router.get("/profile", authenticateToken, getStudentProfile); // Authenticated student
+router.get("/all", authenticateToken, authorizeRole("admin"), getAllStudents); 
+router.get("/profile", authenticateToken, getStudentProfile); 
 router.put(
   "/profile",
   authenticateToken,

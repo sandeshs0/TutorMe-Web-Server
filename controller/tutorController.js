@@ -63,94 +63,6 @@ const cloudinary = require("../utils/cloudinary");
 //   }
 // };
 
-// const getTutors = async (req, res) => {
-//   try {
-//     const {
-//       subject,
-//       minHourlyRate,
-//       maxHourlyRate,
-//       minRating,
-//       maxRating,
-//       search,
-//       sortBy,
-//       sortOrder = "asc",
-//       page = 1,
-//       limit = 10,
-//     } = req.query;
-
-//     const query = {};
-
-//     // 🔍 Search by name, username, or bio
-//     if (search) {
-//       query.$or = [
-//         { bio: { $regex: search, $options: "i" } },
-//         { description: { $regex: search, $options: "i" } },
-//       ];
-//     }
-
-//     // 🎯 Filter by subject
-//     if (subject) {
-//       const subjectDoc = await Subject.findOne({ name: subject });
-//       if (subjectDoc) query.subjects = subjectDoc._id;
-//     }
-
-//     if (minHourlyRate)
-//       query.hourlyRate = { ...query.hourlyRate, $gte: Number(minHourlyRate) };
-//     if (maxHourlyRate)
-//       query.hourlyRate = { ...query.hourlyRate, $lte: Number(maxHourlyRate) };
-
-//           if (minRating)
-//       query.rating = { ...query.rating, $gte: Number(minRating) };
-//     if (maxRating)
-//       query.rating = { ...query.rating, $lte: Number(maxRating) };
-
-//     const sortOptions = {};
-//     if (sortBy) {
-//       const validSortFields = ["hourlyRate", "rating", "name"];
-//       if (validSortFields.includes(sortBy)) {
-//         sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
-//       }
-//     }
-
-//     // Fetch tutors with filters, sorting, and pagination
-//     const tutors = await Tutor.find(query)
-//       .populate("userId", "name profileImage email username") // Fetch user details
-//       .populate("subjects", "name") // Fetch subject names
-//       .sort(sortOptions)
-//       .skip((page - 1) * limit)
-//       .limit(Number(limit));
-
-//     const totalTutors = await Tutor.countDocuments(query);
-
-//     // Format response
-//     const filteredTutors = tutors.map((tutor) => ({
-//       id: tutor._id,
-//       name: tutor.userId?.name,
-//       profileImage: tutor.profileImage,
-//       email: tutor.userId?.email,
-//       username: tutor.userId?.username,
-//       bio: tutor.bio,
-//       description: tutor.description,
-//       hourlyRate: tutor.hourlyRate,
-//       rating: tutor.rating,
-//       subjects: tutor.subjects.map((subject) => subject.name),
-//       availability: tutor.availability,
-//     }));
-
-//     res.status(200).json({
-//       message: "Tutors fetched successfully",
-//       tutors: filteredTutors,
-//       pagination: {
-//         currentPage: Number(page),
-//         totalPages: Math.ceil(totalTutors / limit),
-//         totalTutors,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Error fetching tutors:", error);
-//     res.status(500).json({ message: "Failed to fetch tutors" });
-//   }
-// };
 
 const getTutors = async (req, res) => {
   try {
@@ -169,41 +81,36 @@ const getTutors = async (req, res) => {
 
     const query = {};
 
-    // 🎯 Search by name, username, bio, or description
     if (search) {
       const userSearchQuery = { 
         $or: [
-          { name: { $regex: search, $options: "i" } }, // Search by name
-          { username: { $regex: search, $options: "i" } }, // Search by username
+          { name: { $regex: search, $options: "i" } }, 
+          { username: { $regex: search, $options: "i" } }, 
         ],
       };
 
-      // Find matching users first
+  
       const users = await User.find(userSearchQuery).select("_id");
       const userIds = users.map(user => user._id);
 
       query.$or = [
-        { userId: { $in: userIds } }, // Match user IDs from search
-        { bio: { $regex: search, $options: "i" } }, // Match bio
-        { description: { $regex: search, $options: "i" } }, // Match description
+        { userId: { $in: userIds } }, 
+        { bio: { $regex: search, $options: "i" } }, 
+        { description: { $regex: search, $options: "i" } }, 
       ];
     }
 
-    // 🎯 Filter by subject
     if (subject) {
       const subjectDoc = await Subject.findOne({ name: subject });
       if (subjectDoc) query.subjects = subjectDoc._id;
     }
 
-    // 🎯 Filter by hourly rate
     if (minHourlyRate) query.hourlyRate = { ...query.hourlyRate, $gte: Number(minHourlyRate) };
     if (maxHourlyRate) query.hourlyRate = { ...query.hourlyRate, $lte: Number(maxHourlyRate) };
 
-    // 🎯 Filter by rating
     if (minRating) query.rating = { ...query.rating, $gte: Number(minRating) };
     if (maxRating) query.rating = { ...query.rating, $lte: Number(maxRating) };
 
-    // 🔀 Sorting logic
     const sortOptions = {};
     if (sortBy) {
       const validSortFields = ["hourlyRate", "rating", "name"];
@@ -212,17 +119,15 @@ const getTutors = async (req, res) => {
       }
     }
 
-    // Fetch tutors with filters, sorting, and pagination
     const tutors = await Tutor.find(query)
-      .populate("userId", "name profileImage email username") // Fetch user details
-      .populate("subjects", "name") // Fetch subject names
+      .populate("userId", "name profileImage email username") 
+      .populate("subjects", "name")
       .sort(sortOptions)
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
     const totalTutors = await Tutor.countDocuments(query);
 
-    // Format response
     const filteredTutors = tutors.map((tutor) => ({
       id: tutor._id,
       name: tutor.userId?.name,
@@ -252,14 +157,10 @@ const getTutors = async (req, res) => {
   }
 };
 
-
-// Update Tutor Profile
-
 const updateTutorProfile = async (req, res) => {
   try {
-    const tutorId = req.user.id; // Authenticated tutor's ID from token
+    const tutorId = req.user.id;
     const { bio, description, hourlyRate, subjects, availability } = req.body;
-    // let profileImage = req.file?.path; // Use the Cloudinary URL provided by multer
     console.log(typeof subjects);
     const updateFields = {};
 
@@ -271,11 +172,10 @@ const updateTutorProfile = async (req, res) => {
 
     if (req.file) {
       const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "tutor-profile-images", // Ensure the correct folder is used
+        folder: "tutor-profile-images", 
       });
       updateFields.profileImage = uploadResult.secure_url;
       console.log("uploadResult:", uploadResult);
-      // Update the database with the new URL
     }
 
     // if (subjects) {
@@ -303,11 +203,9 @@ const updateTutorProfile = async (req, res) => {
         })
       );
 
-      // Update the subjects field in updateFields
       updateFields.subjects = subjectIds;
     }
 
-    // Update the tutor profile
 
     // if (profileImage) {
     //   updateFields.profileImage = profileImage; // Add profile picture if uploaded
@@ -335,12 +233,11 @@ const updateTutorProfile = async (req, res) => {
   }
 };
 
-// Fetch a Specific Tutor's Profile
 const getTutorProfile = async (req, res) => {
   try {
-    const tutorId = req.user.id; // Authenticated tutor's ID from token
+    const tutorId = req.user.id; 
 
-    // Fetch the tutor's details along with the related user and subjects
+   
     const tutor = await Tutor.findOne({ userId: tutorId })
       .populate("userId", "name email phone profileImage")
       .populate("subjects", "name");
@@ -349,7 +246,6 @@ const getTutorProfile = async (req, res) => {
       return res.status(404).json({ message: "Tutor profile not found" });
     }
 
-    // Format the response to include only public and necessary fields
     const tutorProfile = {
       id: tutor._id,
       name: tutor.userId.name,
@@ -375,10 +271,9 @@ const getTutorProfile = async (req, res) => {
   }
 };
 
-// Fetch a Specific Tutor's Profile by Username
 const getTutorByUsername = async (req, res) => {
   try {
-    const { username } = req.params; // Get the username from the request params
+    const { username } = req.params; 
     const user = await User.findOne({ username });
 
     if (!user) {
@@ -387,16 +282,15 @@ const getTutorByUsername = async (req, res) => {
         .json({ message: "Tutor with the given username not found" });
     }
 
-    // Fetch the tutor details using the user's ID
+
     const tutor = await Tutor.findOne({ userId: user._id })
-      .populate("userId", "name profileImage") // Include name and profile image of the tutor
-      .populate("subjects", "name"); // Include the names of the subjects
+      .populate("userId", "name profileImage") 
+      .populate("subjects", "name");
 
     if (!tutor) {
       return res.status(404).json({ message: "Tutor profile not found" });
     }
 
-    // Format the response to include only necessary fields
     const tutorProfile = {
       id: tutor._id,
       name: tutor.userId?.name || "N/A",
@@ -406,7 +300,7 @@ const getTutorByUsername = async (req, res) => {
       description: tutor.description,
       hourlyRate: tutor.hourlyRate,
       rating: tutor.rating,
-      subjects: tutor.subjects.map((subject) => subject.name), // Include subject names only
+      subjects: tutor.subjects.map((subject) => subject.name),
       availability: tutor.availability,
     };
 

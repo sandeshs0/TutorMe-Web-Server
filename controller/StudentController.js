@@ -59,7 +59,7 @@ const updateStudentProfile = async (req, res) => {
     const studentId = req.user.id;
     const { name, email, phone } = req.body;
 
-    let profileImage = req.file?.path; // Use the Cloudinary URL provided by multer
+    let profileImage = req.file?.path; 
 
     // Update the user data
     const updatedUser = await User.findByIdAndUpdate(
@@ -72,10 +72,9 @@ const updateStudentProfile = async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
-    // Update the student's profileImage field if a new image is uploaded
     const updatedStudent = await Student.findOneAndUpdate(
-      { userId: studentId }, // Locate the Student document by userId
-      { ...(profileImage && { profileImage }) }, // Only update profileImage if it exists
+      { userId: studentId }, 
+      { ...(profileImage && { profileImage }) },
       { new: true }
     ).populate("userId", "name email phone profileImage role");
     res.status(200).json({

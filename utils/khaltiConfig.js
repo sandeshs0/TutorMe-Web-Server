@@ -4,7 +4,7 @@ const khaltiConfig = {
     productName: "Wallet Load",
     eventHandler: {
       onSuccess(payload) {
-        // Call the verify transaction endpoint
+        
         console.log("Payment Success:", payload);
       },
       onError(error) {

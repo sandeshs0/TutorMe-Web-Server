@@ -4,21 +4,14 @@ const Tutor = require("../model/tutor");
 const Earning = require("../model/Earning");
 const Session = require("../model/Session");
 const User = require("../model/user");
-const Transaction = require("../model/Transaction"); // Track transactions
-const { sendNotification } = require("../utils/notifications"); // Notification utility
+const Transaction = require("../model/Transaction"); 
+const { sendNotification } = require("../utils/notifications");
 const { date } = require("joi");
 
-// const { io } = require("../app"); // Import io properly
-// const connectedUsers = require("../socketStore");
-
-// Booking Fee (To prevent fraudulent bookings)
 const BOOKING_FEE = 30;
 // Platform Commission (20%)
 const PLATFORM_COMMISSION = 0.2;
 
-/**
- * Send real-time updates using WebSockets
- */
 const sendRealTimeUpdate = (userId, event, data) => {
   if (!userId) {
     console.error("Invalid userId provided for WebSocket event.");
@@ -43,9 +36,7 @@ const sendRealTimeUpdate = (userId, event, data) => {
 };
 
 const BookingController = {
-  /**
-   * Create a new booking request
-   */
+  
   async createBooking(req, res) {
     console.log("creating booking: ", req.body);
     try {
@@ -56,7 +47,6 @@ const BookingController = {
         return res.status(404).json({ message: "Student profile not found." });
       }
 
-      // ✅ Fetch tutor & populate userId to ensure it's available
       const tutor = await Tutor.findById(tutorId).populate("userId", "id");
 
       if (!tutor) {
@@ -70,18 +60,15 @@ const BookingController = {
 
       console.log("✅ Tutor found:", tutor);
 
-      // ✅ Check if student has enough balance
       if (student.walletBalance < tutor.hourlyRate + BOOKING_FEE) {
         return res
           .status(400)
           .json({ message: "Insufficient wallet balance." });
       }
 
-      // ✅ Deduct booking fee from student's wallet
       student.walletBalance -= BOOKING_FEE;
       await student.save();
 
-      // ✅ Create booking entry
       const booking = new Booking({
         studentId: student._id,
         tutorId,
@@ -105,14 +92,6 @@ const BookingController = {
         `🔍 Socket ID found:`,
         connectedUsers[tutor.userId._id.toString()]
       );
-
-      // sendRealTimeUpdate(
-      //   tutor.userId._id.toString(),
-      //   "booking-request",
-      //   booking
-      // );
-
-      // ✅ Notify tutor
       sendNotification(
         tutor.userId._id,
         `You have a new booking request from ${studentObject.name} for ${date} at ${time}.`
@@ -131,9 +110,6 @@ const BookingController = {
     }
   },
 
-  /**
-   * Tutor accepts a booking
-   */
   async acceptBooking(req, res) {
     try {
       const { bookingId } = req.params;
@@ -156,7 +132,7 @@ const BookingController = {
         return res.status(400).json({ message: "Booking is not pending." });
       }
 
-      // Generating a unique room ID for the session (jitsi)
+      
       const sessionRoom = `https://meet.jit.si/session_${booking._id}`;
 
       const session = new Session({
@@ -183,10 +159,6 @@ const BookingController = {
         studentUser.userId._id,
         `${tutorUser.name} has accepted your session request. Check the sessions tab.`
       );
-      // sendRealTimeUpdate(studentUser.userId._id, "booking-accepted", {
-      //   booking,
-      //   sessionRoom,
-      // });
       const tutorEarning = new Earning({
         tutorId: tutor._id,
         studentId: booking.studentId,
@@ -213,9 +185,7 @@ const BookingController = {
     }
   },
 
-  /**
-   * Tutor declines a booking (Refunds booking fee)
-   */
+
   async declineBooking(req, res) {
     try {
       const { bookingId } = req.params;
@@ -264,9 +234,7 @@ const BookingController = {
     }
   },
 
-  /**
-   * Process payment after the session is completed
-   */
+
   async processSessionPayment(req, res) {
     try {
       const { bookingId } = req.params;
@@ -432,14 +400,13 @@ const BookingController = {
         .select("-createdAt -updatedAt -__v")
         .sort({ createdAt: -1 });
 
-      // Transform the response to replace tutorId with tutorObj
       const modifiedBookings = bookings.map((booking) => {
-        const bookingObj = booking.toObject(); // Convert Mongoose document to plain object
-        const { tutorId, ...rest } = bookingObj; // Destructure to remove tutorId
+        const bookingObj = booking.toObject(); 
+        const { tutorId, ...rest } = bookingObj; 
 
         return {
           ...rest,
-          tutorId: tutorId._id, // Change _id to id
+          tutorId: tutorId._id, 
           tutorName: tutorId.userId.name,
           profileImage: tutorId.profileImage,
           hourlyRate: tutorId.hourlyRate,
@@ -453,9 +420,6 @@ const BookingController = {
     }
   },
 
-  /**
-   * Fetch all bookings for a tutor
-   */
   async getTutorBookings(req, res) {
     try {
       const tutor = await Tutor.findOne({ userId: req.user.id });
@@ -465,11 +429,11 @@ const BookingController = {
 
       const bookings = await Booking.find({ tutorId: tutor._id })
         .populate({
-          path: "studentId", // Populate studentId (which references the Student model)
-          select: "userId profileImage", // Include fields from the Student model
+          path: "studentId", 
+          select: "userId profileImage", 
           populate: {
-            path: "userId", // Populate the userId reference (which refers to the User model)
-            select: "name", // Include the name from the User model
+            path: "userId", 
+            select: "name", 
           },
         })
         .sort({ createdAt: -1 });

@@ -5,7 +5,6 @@ const { authenticateToken } = require("../security/Auth");
 
 const router = express.Router();
 
-// Fetch earnings for a logged-in tutor
 router.get("/", authenticateToken, async (req, res) => {
   console.log("Fetching earnings for tutor", req.user.id);
   try {

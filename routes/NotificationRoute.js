@@ -4,13 +4,12 @@ const { authenticateToken } = require("../security/Auth");
 
 const router = express.Router();
 
-// Fetch notifications for a logged-in user
 router.get("/", authenticateToken, async (req, res) => {
   console.log("Fetching notifications for user:", req.user.id);
   try {
     const notifications = await Notification.find({ userId: req.user.id })
       .sort({ createdAt: -1 })
-      .limit(20); // Limit recent notifications
+      .limit(20); 
 
     res.status(200).json(notifications);
   } catch (error) {
@@ -19,7 +18,6 @@ router.get("/", authenticateToken, async (req, res) => {
   }
 });
 
-// Mark notifications as read
 router.put("/mark-read", authenticateToken, async (req, res) => {
   try {
     await Notification.updateMany({ userId: req.user.id }, { isRead: true });

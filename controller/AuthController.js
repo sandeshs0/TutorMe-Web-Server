@@ -4,17 +4,16 @@ const User = require("../model/user");
 const Student = require("../model/student");
 const Tutor = require("../model/tutor");
 const Subject = require("../model/subject");
-const TempUser = require("../model/tempUser"); // Temp User Model
-const { sendEmail } = require("../utils/emailService"); // Email Utility
+const TempUser = require("../model/tempUser"); 
+const { sendEmail } = require("../utils/emailService");
 
 const SECRET_KEY =
   "c597cfe12544544faa9f04ef0860c5882dd30a5dbd65b567c6a511504823cdd5";
 
-// Generate OTP
 const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // Generate a 6-digit OTP
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };
-// Register Function
+
 const register = async (req, res) => {
   console.log("signup attempt:", req.body);
   try {
@@ -30,10 +29,8 @@ const register = async (req, res) => {
       hourlyRate,
       subjects,
     } = req.body;
-    // Check if the email or phone already exists
     const existingTempUser = await TempUser.findOne({ email });
     const existingUser = await User.findOne({ email });
-    // const existingPhone = await User.findOne({ phone });
     const existingUsername = await User.findOne({ username });
     if (existingTempUser || existingUser || existingUsername) {
       return res
@@ -41,19 +38,15 @@ const register = async (req, res) => {
         .json({ message: "User with Email or Username already exists" });
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate OTP
     const otp = generateOTP();
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // OTP valid for 10 minutes
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    // Handle profile image (if uploaded)
     let profileImage = null;
     if (req.file) {
-      profileImage = req.file.path; // Cloudinary returns the URL of the uploaded image
+      profileImage = req.file.path; 
     }
-    // Save user data in tempUsers
     const tempUser = new TempUser({
       name,
       email,
@@ -64,7 +57,7 @@ const register = async (req, res) => {
       otp,
       otpExpiresAt,
       profileImage,
-      ...(role === "tutor" && { bio, description, hourlyRate, subjects }), // Add tutor-specific fields
+      ...(role === "tutor" && { bio, description, hourlyRate, subjects }),
     });
     await tempUser.save();
     const htmlContent = `
@@ -195,14 +188,12 @@ const register = async (req, res) => {
   }
 };
 
-// Verify Email Function
 const verifyEmail = async (req, res) => {
   console.log("verify otp attempt:", req.body);
 
   try {
     const { email, otp } = req.body;
 
-    // Find the user in tempUsers
     const tempUser = await TempUser.findOne({ email });
     if (!tempUser) {
       return res
@@ -210,7 +201,6 @@ const verifyEmail = async (req, res) => {
         .json({ message: "User not found or already verified" });
     }
 
-    // Check OTP validity
     if (tempUser.otp !== otp) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
@@ -218,7 +208,6 @@ const verifyEmail = async (req, res) => {
       return res.status(400).json({ message: "OTP has expired" });
     }
 
-    // Move the user to the users collection
     const {
       name,
       phone,
@@ -266,7 +255,6 @@ const verifyEmail = async (req, res) => {
       await newTutor.save();
     }
 
-    // Delete the user from tempUsers
     await TempUser.deleteOne({ email });
 
     res
@@ -279,26 +267,22 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-// Login Function
 const login = async (req, res) => {
   console.log("login attempt:", req.body);
   try {
     const { email, password } = req.body;
 
-    // Find the user by email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if the password is correct
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
       console.log("Invalid credentials");
 
       return res.status(400).json({ message: "Invalid credentials" });
     }
-    // Generate a token
     const token = jwt.sign({ id: user._id, role: user.role }, SECRET_KEY, {
       expiresIn: "1d",
     });
@@ -316,7 +300,6 @@ const resendOTP = async (req, res) => {
   try {
     const { email } = req.body;
 
-    // Find the user in tempUsers
     const tempUser = await TempUser.findOne({ email });
     if (!tempUser) {
       return res
@@ -324,16 +307,14 @@ const resendOTP = async (req, res) => {
         .json({ message: "User not found or already verified" });
     }
 
-    // Generate a new OTP
     const otp = generateOTP();
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
 
-    // Update OTP in tempUsers
     tempUser.otp = otp;
     tempUser.otpExpiresAt = otpExpiresAt;
     await tempUser.save();
 
-    //
+    
     const htmlContent = `
 <html lang="en">
 <head>
@@ -419,7 +400,8 @@ const resendOTP = async (req, res) => {
     <div class="container">
         <div class="header">
             <!-- Replace src with the path to your logo image -->
-            <img src="https://i.postimg.cc/tJh83M61/logostroke.png" alt="Logo">
+            <h1>TutorMe</h1>
+            // <img src="https://i.postimg.cc/tJh83M61/logostroke.png" alt="Logo">
         </div>
         <div class="content">
             <h1 style="color:#ffffff">Confirm your email address!</h1>
@@ -451,7 +433,7 @@ const resendOTP = async (req, res) => {
       "Your OTP is ready.",
       htmlContent
     );
-    // Resend OTP via email
+  
     res.status(200).json({ message: "New OTP sent to your email." });
   } catch (error) {
     console.error("Error during OTP resend:", error);

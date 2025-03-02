@@ -9,18 +9,18 @@ const sendRealTimeUpdate = (userId, event, data) => {
   console.log("Inside Realitime notification ")
 
   const socketId = global.connectedUsers[userId.toString()];
-  console.log("🔍 Checking connectedUsers:", global.connectedUsers);
-  console.log(`🔍 Checking for user: ${userId}, Found socket ID:`, socketId);
+  console.log("Checking connectedUsers:", global.connectedUsers);
+  console.log(` Checking for user: ${userId}, Found socket ID:`, socketId);
   if (!global.io) {
-    console.error("❌ io is undefined! WebSocket might not be initialized.");
+    console.error(" io is undefined! WebSocket might not be initialized.");
     return;
   }
 
   if (socketId) {
     global.io.to(socketId).emit(event, data);
-    console.log(`✅ WebSocket Event Sent: ${event} to user ${userId}`);
+    console.log(` WebSocket Event Sent: ${event} to user ${userId}`);
   } else {
-    console.warn(`⚠️ User ${userId} is not online. Storing notification.`);
+    console.warn(` User ${userId} is not online. Storing notification.`);
     // sendNotification(userId, `You have a new ${event}`);
   }
 };

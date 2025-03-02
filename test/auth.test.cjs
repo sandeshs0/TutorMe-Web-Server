@@ -74,7 +74,7 @@ describe("Auth API", () => {
       const tempUser = await TempUser.findOne({ email: testEmail });
       expect(tempUser).to.not.be.null;
       otp = tempUser.otp;
-      console.log("🔍 Retrieved OTP from DB:", otp);
+      console.log(" Retrieved OTP from DB:", otp);
 
       chai
         .request(app)
@@ -84,7 +84,7 @@ describe("Auth API", () => {
           otp: otp,
         })
         .end((err, res) => {
-          console.log("🔍 OTP Verification Response:", res.body);
+          console.log("OTP Verification Response:", res.body);
           expect(res).to.have.status(200);
           expect(res.body).to.have.property(
             "message",
@@ -96,18 +96,18 @@ describe("Auth API", () => {
   });
 
   it("should verify tutor's registration", function (done) {
-    this.timeout(10000); // ✅ Extend timeout to 10 seconds
+    this.timeout(10000); 
 
     setTimeout(async () => {
       const tempTutor = await TempUser.findOne({ email: tutorEmail });
 
       if (!tempTutor) {
-        console.error("❌ Tutor TempUser entry not found in DB!");
+        console.error(" Tutor TempUser entry not found in DB!");
         return done(new Error("Tutor TempUser entry not found!"));
       }
 
       otp = tempTutor.otp;
-      console.log("🔍 Retrieved Tutor OTP from DB:", otp);
+      console.log("Retrieved Tutor OTP from DB:", otp);
 
       chai
         .request(app)
@@ -118,11 +118,11 @@ describe("Auth API", () => {
         })
         .end((err, res) => {
           if (err) {
-            console.error("❌ Error in OTP verification:", err);
+            console.error("Error in OTP verification:", err);
             return done(err);
           }
 
-          console.log("🔍 Tutor OTP Verification Response:", res.body);
+          console.log("Tutor OTP Verification Response:", res.body);
           expect(res).to.have.status(200);
           expect(res.body).to.have.property(
             "message",
@@ -145,8 +145,8 @@ describe("Auth API", () => {
         })
       )
       .end((err, res) => {
-        console.log("🔍 Response Status:", res.status);
-        console.log("🔍 Response Body:", res.body);
+        console.log("Response Status:", res.status);
+        console.log(" Response Body:", res.body);
 
         expect(res).to.have.status(200);
         expect(res.body).to.have.property("token");

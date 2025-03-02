@@ -18,26 +18,23 @@ const SessionRoute = require("./routes/SessionRoute");
 const EarningRoute = require("./routes/EarningRoute");
 
 const app = express();
-const server = http.createServer(app); // ✅ Create HTTP Server
+const server = http.createServer(app); 
 
 module.exports = { app };
 
 global.io = socketIo(server, {
   cors: {
-    origin: "http://localhost:5173", // Allow frontend connection
+    origin: "http://localhost:5173", 
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true, // ✅ Fix CORS issue
+    credentials: true,
   },
 });
 
-// Store connected users for real-time updates
 global.connectedUsers = {};
-// ✅ Handle WebSocket connections
 global.io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
   console.log("Connected Users:", global.connectedUsers);
 
-  // ✅ Register user on login
   socket.on("register", (userId) => {
     if (userId) {
       global.connectedUsers[userId.toString()] = socket.id;
@@ -45,39 +42,34 @@ global.io.on("connection", (socket) => {
       console.log("Connected Users:", global.connectedUsers);
       console.log(typeof global.connectedUsers);
     } else {
-      console.log("⚠️ No userId provided for registration.");
+      console.log(" No userId provided for registration.");
     }
   });
   // console.log("Connected Users:", connectedUsers);
   // console.log(typeof connectedUsers);
 
-  // ✅ Join a chat/session room
   socket.on("join-room", (roomId) => {
     socket.join(roomId);
     console.log(`User joined room: ${roomId}`);
   });
 
-  // ✅ Handle real-time messages
   socket.on("send-message", (data) => {
     io.to(data.roomId).emit("receive-message", data);
   });
 
-  // ✅ Notify on user disconnect
   socket.on("disconnect", () => {
     Object.keys(global.connectedUsers).forEach((key) => {
       if (global.connectedUsers[key] === socket.id) {
         delete global.connectedUsers[key];
-        console.log(`❌ User ${key} disconnected.`);
+        console.log(`User ${key} disconnected.`);
       }
     });
-    console.log(`❌ Socket disconnected: ${socket.id}`);
+    console.log(` Socket disconnected: ${socket.id}`);
   });
 });
 
-// ✅ Connect to MongoDB
 connectDb();
 
-// ✅ Middlewares
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -87,7 +79,6 @@ app.use(
 );
 app.use(express.json());
 
-// ✅ Routes
 app.use("/auth", AuthRoute);
 app.use("/api/users", UserRoute);
 app.use("/api/tutors", TutorRoute);
@@ -101,7 +92,7 @@ app.use("/api/earning", EarningRoute);
 
 const port = 3000;
 // server.listen(port, () => {
-//   console.log(`✅ Server Running at http://localhost:${port}`);
+//   console.log(` Server Running at http://localhost:${port}`);
 // });
 
 // module.exports = { app };
@@ -112,5 +103,4 @@ if (process.env.NODE_ENV !== "test") {
   });
 }
 
-// ✅ Export both `app` and `server` for testing
 module.exports = { app, server };
