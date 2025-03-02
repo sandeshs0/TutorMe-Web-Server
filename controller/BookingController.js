@@ -19,18 +19,18 @@ const sendRealTimeUpdate = (userId, event, data) => {
   }
 
   const socketId = global.connectedUsers[userId.toString()];
-  console.log("🔍 Checking connectedUsers:", global.connectedUsers);
-  console.log(`🔍 Checking for user: ${userId}, Found socket ID:`, socketId);
+  console.log(" Checking connectedUsers:", global.connectedUsers);
+  console.log(` Checking for user: ${userId}, Found socket ID:`, socketId);
   if (!global.io) {
-    console.error("❌ io is undefined! WebSocket might not be initialized.");
+    console.error(" io is undefined! WebSocket might not be initialized.");
     return;
   }
 
   if (socketId) {
     global.io.to(socketId).emit(event, data);
-    console.log(`✅ WebSocket Event Sent: ${event} to user ${userId}`);
+    console.log(` WebSocket Event Sent: ${event} to user ${userId}`);
   } else {
-    console.warn(`⚠️ User ${userId} is not online. Storing notification.`);
+    console.warn(`User ${userId} is not online. Storing notification.`);
     sendNotification(userId, `You have a new ${event}`);
   }
 };
@@ -54,11 +54,11 @@ const BookingController = {
       }
 
       if (!tutor.userId) {
-        console.error("❌ Tutor userId is missing for tutor:", tutor);
+        console.error(" Tutor userId is missing for tutor:", tutor);
         return res.status(500).json({ message: "Tutor data is incomplete." });
       }
 
-      console.log("✅ Tutor found:", tutor);
+      console.log(" Tutor found:", tutor);
 
       if (student.walletBalance < tutor.hourlyRate + BOOKING_FEE) {
         return res
@@ -79,17 +79,17 @@ const BookingController = {
       });
 
       await booking.save();
-      console.log("✅ Booking created:", booking);
-      console.log("✅ Tutor fetched:", tutor);
+      console.log(" Booking created:", booking);
+      console.log(" Tutor fetched:", tutor);
 
       if (!tutor || !tutor.userId) {
-        console.log("❌ Tutor userId is missing for tutor:", tutor);
+        console.log(" Tutor userId is missing for tutor:", tutor);
         return res.status(500).json({ message: "Tutor data is incomplete." });
       }
-      console.log("🔍 Checking connectedUsers:", connectedUsers);
-      console.log(`🔍 Checking for tutor: ${tutor.userId._id.toString()}`);
+      console.log("Checking connectedUsers:", connectedUsers);
+      console.log(` Checking for tutor: ${tutor.userId._id.toString()}`);
       console.log(
-        `🔍 Socket ID found:`,
+        ` Socket ID found:`,
         connectedUsers[tutor.userId._id.toString()]
       );
       sendNotification(
@@ -105,7 +105,7 @@ const BookingController = {
       });
       console.log("booking created");
     } catch (error) {
-      console.error("❌ Error creating booking:", error);
+      console.error(" Error creating booking:", error);
       res.status(500).json({ message: "Failed to create booking" });
     }
   },
@@ -153,7 +153,7 @@ const BookingController = {
       console.log("🔍 Student user found:", studentUser);
       booking.status = "accepted";
       await booking.save();
-      console.log("✅ Booking accepted:", booking);
+      console.log(" Booking accepted:", booking);
       console.log("sending notification to user id", studentUser.userId._id);
       sendNotification(
         studentUser.userId._id,
@@ -210,7 +210,7 @@ const BookingController = {
 
       booking.status = "declined";
       await booking.save();
-      console.log("✅ Booking declined:", booking);
+      console.log(" Booking declined:", booking);
       // const studentUser = await Student.findById(booking.studentId);
       const tutorUser = await User.findById(tutor.userId);
 

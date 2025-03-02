@@ -16,15 +16,16 @@ const connectedUsers = require("./socketStore");
 const NotificationRoute = require("./routes/NotificationRoute");
 const SessionRoute = require("./routes/SessionRoute");
 const EarningRoute = require("./routes/EarningRoute");
+const ReviewRoute = require("./routes/ReviewRoute");
 
 const app = express();
-const server = http.createServer(app); 
+const server = http.createServer(app);
 
 module.exports = { app };
 
 global.io = socketIo(server, {
   cors: {
-    origin: "http://localhost:5173", 
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
@@ -89,6 +90,7 @@ app.use("/api/bookings", BookingRoute);
 app.use("/api/notifications", NotificationRoute);
 app.use("/api/sessions", SessionRoute);
 app.use("/api/earning", EarningRoute);
+app.use("/api/review", ReviewRoute);
 
 const port = 3000;
 // server.listen(port, () => {
