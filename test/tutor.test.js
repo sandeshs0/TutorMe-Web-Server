@@ -69,7 +69,6 @@ describe("Tutor API", () => {
       .end((err, res) => {
         expect(res).to.have.status(200);
         expect(res.body).to.have.property("tutor");
-        // expect(res.body.tutor).to.have.property("username", tutorUsername);
         done();
       });
   });

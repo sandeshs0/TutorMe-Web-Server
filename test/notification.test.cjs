@@ -11,7 +11,6 @@ describe("Notification API", () => {
   let userToken;
 
   before((done) => {
-    // Login as a user to obtain a token
     chai
       .request(app)
       .post("/auth/login")
