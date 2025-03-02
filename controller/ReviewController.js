@@ -89,7 +89,7 @@ const ReviewController = {
       const formattedReviews = reviews.map((review) => ({
         reviewId: review._id,
         studentName: review.studentId.userId.name,
-        studentProfileImage: review.studentId.userId.profileImage,
+        studentProfileImage: review.studentId.profileImage,
         rating: review.rating,
         text: review.text,
         createdAt: review.createdAt,
@@ -101,7 +101,6 @@ const ReviewController = {
           tutorId: tutor._id,
           name: user.name,
           username: user.username,
-          profileImage: user.profileImage,
           rating: tutor.rating,
         },
         reviews: formattedReviews,

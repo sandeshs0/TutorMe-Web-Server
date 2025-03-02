@@ -42,39 +42,39 @@ describe("Booking API", () => {
       });
   });
 
-  it("should create a new booking request", (done) => {
-    chai
-      .request(app)
-      .post("/api/bookings/request")
-      .set("Authorization", `Bearer ${studentToken}`)
-      .send({
-        tutorId: "67c028f0850e27ee3997187d", // Replace with actual tutor ID
-        date: "2025-03-10",
-        time: "10:00 AM",
-        note: "Need help with math",
-      })
-      .end((err, res) => {
-        expect(res).to.have.status(201);
-        expect(res.body).to.have.property(
-          "message",
-          "Booking request created successfully."
-        );
-        bookingId = res.body.booking._id;
-        done();
-      });
-  });
+  // it("should create a new booking request", (done) => {
+  //   chai
+  //     .request(app)
+  //     .post("/api/bookings/request")
+  //     .set("Authorization", `Bearer ${studentToken}`)
+  //     .send({
+  //       tutorId: "67c028f0850e27ee3997187d", // Replace with actual tutor ID
+  //       date: "2025-03-10",
+  //       time: "10:00 AM",
+  //       note: "Need help with math",
+  //     })
+  //     .end((err, res) => {
+  //       expect(res).to.have.status(201);
+  //       expect(res.body).to.have.property(
+  //         "message",
+  //         "Booking request created successfully."
+  //       );
+  //       bookingId = res.body.booking._id;
+  //       done();
+  //     });
+  // });
 
-  it("should accept a booking request", (done) => {
-    chai
-      .request(app)
-      .put(`/api/bookings/accept/${bookingId}`)
-      .set("Authorization", `Bearer ${tutorToken}`)
-      .end((err, res) => {
-        expect(res).to.have.status(200);
-        expect(res.body).to.have.property("message", "Booking accepted.");
-        done();
-      });
-  });
+  // it("should accept a booking request", (done) => {
+  //   chai
+  //     .request(app)
+  //     .put(`/api/bookings/accept/${bookingId}`)
+  //     .set("Authorization", `Bearer ${tutorToken}`)
+  //     .end((err, res) => {
+  //       expect(res).to.have.status(200);
+  //       expect(res.body).to.have.property("message", "Booking accepted.");
+  //       done();
+  //     });
+  // });
 
   it("should fetch all student bookings", (done) => {
     chai

@@ -1,4 +1,4 @@
-const { app } = require("../app.js"); // ✅ Use only `app`, not `server`
+const { app } = require("../app.js"); 
 const chai = require("chai");
 const chaiHttp = require("chai-http");
 const mongoose = require("mongoose");
@@ -12,7 +12,7 @@ describe("Auth API", () => {
   let userToken;
   let testEmail = `test${Date.now()}@example.com`;
   let testUsername = `user${Date.now()}`;
-  let testPhone = `987654${Math.floor(1000 + Math.random() * 9000)}`; // ✅ Ensure unique phone number
+  let testPhone = `987654${Math.floor(1000 + Math.random() * 9000)}`; 
   let otp;
   let tutorEmail = `tutor${Date.now()}@example.com`;
 
