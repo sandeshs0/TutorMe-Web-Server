@@ -4,8 +4,8 @@ require("dotenv").config();
 const connectDB = async () => {
   const dbUri =
     process.env.NODE_ENV === "test"
-      ? "mongodb://localhost:27017/db_tutorme_test"
-      : "mongodb://localhost:27017/db_tutorme";
+      ? process.env.TEST_MONGO_URI
+      : process.env.MONGO_URI;
 
   try {
     await mongoose.connect(dbUri, {

@@ -2,12 +2,13 @@ const { solar } = require("googleapis/build/src/apis/solar");
 const Transaction = require("../model/Transaction");
 const Student = require("../model/student");
 const axios = require("axios");
+const { sendNotification } = require("../utils/notifications");
 const KHALTI_SECRET = process.env.KHALTI_SECRET_KEY;
 const KHALTI_PUBLIC = process.env.KHALTI_PUBLIC_KEY;
 
 const WalletController = {
-
   async initiateTransaction(req, res) {
+    console.log("Initiating transaction");
     const { amount, paymentGateway } = req.body;
     const userId = req.user.id;
 
@@ -54,15 +55,16 @@ const WalletController = {
       const khaltiResponse = await axios.post(
         "https://dev.khalti.com/api/v2/epayment/initiate/",
         {
-          return_url: "http://localhost:5173/payment-callback", 
+          return_url: "http://localhost:5173/payment-callback",
           website_url: "http://localhost:5173",
-          amount: amount * 100, 
+          amount: amount * 100,
+
           purchase_order_id,
           purchase_order_name,
         },
         {
           headers: {
-            Authorization: `Key 59bc2858051d4983b53fd1b2033e9052`,
+            Authorization: `Key ${KHALTI_SECRET}`,
             "Content-Type": "application/json",
           },
         }
@@ -90,6 +92,7 @@ const WalletController = {
   },
 
   async verifyTransaction(req, res) {
+    console.log("Verifying transaction");
     const { pidx, transaction_id } = req.body;
 
     try {
@@ -107,7 +110,7 @@ const WalletController = {
         },
         {
           headers: {
-            Authorization: `Key 0b353ee393f14dd48743e73b7306ed14`,
+            Authorization: `Key ${KHALTI_PUBLIC}`,
           },
         }
       );
@@ -131,7 +134,16 @@ const WalletController = {
         await Student.findByIdAndUpdate(transaction.studentId, {
           $inc: { walletBalance: total_amount / 100 },
         });
-
+        studentOb = await Student.findById(transaction.studentId).select(
+          "userId walletBalance"
+        );
+        sendNotification(
+          studentOb.userId,
+          `Your tutorMe Wallet has been credited by Rs.${
+            total_amount / 100
+          }. New Balance: ${studentOb.walletBalance}`,
+          "payment"
+        );
         return res.status(200).json({
           success: true,
           message: "Transaction verified successfully, wallet updated",
@@ -200,10 +212,11 @@ const WalletController = {
       }
 
       const transactions = await Transaction.find({
-        studentId: student._id, 
+        studentId: student._id,
         status: "success",
-      }).select("paymentDate paymentGateway amount")
-      .sort({ paymentDate: -1 }); 
+      })
+        .select("paymentDate paymentGateway amount")
+        .sort({ paymentDate: -1 });
 
       if (!transactions.length) {
         return res.status(404).json({

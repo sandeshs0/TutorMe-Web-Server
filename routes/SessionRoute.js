@@ -18,5 +18,4 @@ router.get("/jaas-token/:bookingId", authenticateToken, getJaaSToken);
 router.get("/student", authenticateToken, getStudentSessions);
 router.get("/tutor", authenticateToken, getTutorSessions);
 
-
 module.exports = router;
