@@ -1,10 +1,10 @@
-const bcrypt = require("bcrypt");
+const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../model/user");
 const Student = require("../model/student");
 const Tutor = require("../model/tutor");
 const Subject = require("../model/subject");
-const TempUser = require("../model/tempUser"); 
+const TempUser = require("../model/tempUser");
 const { sendEmail } = require("../utils/emailService");
 
 const SECRET_KEY =
@@ -38,14 +38,14 @@ const register = async (req, res) => {
         .json({ message: "User with Email or Username already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcryptjs.hash(password, 10);
 
     const otp = generateOTP();
     const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     let profileImage = null;
     if (req.file) {
-      profileImage = req.file.path; 
+      profileImage = req.file.path;
     }
     const tempUser = new TempUser({
       name,
@@ -277,7 +277,7 @@ const login = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    const isPasswordCorrect = await bcryptjs.compare(password, user.password);
     if (!isPasswordCorrect) {
       console.log("Invalid credentials");
 
@@ -314,7 +314,6 @@ const resendOTP = async (req, res) => {
     tempUser.otpExpiresAt = otpExpiresAt;
     await tempUser.save();
 
-    
     const htmlContent = `
 <html lang="en">
 <head>
@@ -433,7 +432,7 @@ const resendOTP = async (req, res) => {
       "Your OTP is ready.",
       htmlContent
     );
-  
+
     res.status(200).json({ message: "New OTP sent to your email." });
   } catch (error) {
     console.error("Error during OTP resend:", error);
@@ -452,12 +451,15 @@ const changePassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const isPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
+    const isPasswordCorrect = await bcryptjs.compare(
+      oldPassword,
+      user.password
+    );
     if (!isPasswordCorrect) {
       return res.status(400).json({ message: "Old password is incorrect" });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await bcryptjs.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
 

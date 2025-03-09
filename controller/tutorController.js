@@ -1,7 +1,7 @@
 const Tutor = require("../model/tutor");
 const User = require("../model/user");
 const Subject = require("../model/subject");
-const bcrypt = require("bcrypt");
+const bcryptjs = require("bcryptjs");
 const cloudinary = require("../utils/cloudinary");
 
 // Fetch all tutors
